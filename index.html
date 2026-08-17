@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AgroCAD - Gestor de Proyectos</title>
+    
     <!-- ENLACES PARA QUE SEA APP NATIVA (PWA) -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="icon.png">
+    
     <!-- LIBRERÍAS DE THREE.JS PARA EL 3D -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -46,9 +48,7 @@
         .btn-del-proj { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 6px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-del-proj:hover { background: #ef4444; color: white; }
 
-        /* ========================================= */
-        /* TABS (CORREGIDO EL BUG VISUAL)            */
-        /* ========================================= */
+        /* TABS */
         .tab-bar { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
         .tab-btn { flex: 1; padding: 12px 20px; background: #e2e8f0; color: var(--text-main); border: 2px solid var(--border); border-radius: 8px; font-size: 14.5px; font-weight: 800; cursor: pointer; text-align: center; transition: 0.2s; }
         .tab-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
@@ -87,8 +87,6 @@
         .btn-action { background: #0d9488; }
         .btn-reset { background: #64748b; }
         .btn-share { background: #2563eb; }
-        
-        /* BOTÓN BORRAR (CORREGIDO PARA MAYOR CLARIDAD) */
         .btn-del { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 900; font-size: 14px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
         .btn-del:hover { background: #dc2626; }
         
@@ -123,16 +121,14 @@
             .no-print { display: none !important; }
             .main-grid { display: block !important; }
             
-            /* Título Automático para el Plano PDF */
             .print-only { display: block; font-size: 24pt; font-weight: 900; color: #000; text-transform: uppercase; text-align: center; margin-bottom: 10px; }
 
-            /* FORZAR PÁGINA 1 HORIZONTAL (PLANO) Y PÁGINA 2 VERTICAL (LISTA) */
             @page { margin: 10mm; }
             @page plano-page { size: A4 landscape; }
             @page lista-page { size: A4 portrait; }
 
             .viewer-card { 
-                page: plano-page; /* Asignar a página horizontal */
+                page: plano-page;
                 page-break-after: always !important; 
                 break-after: page !important;
                 border: 2px solid #000 !important; 
@@ -141,13 +137,10 @@
                 margin: 0 !important;
             }
 
-            .svg-wrapper { 
-                width: 100% !important; 
-                height: auto !important; 
-            }
+            .svg-wrapper { width: 100% !important; height: auto !important; }
 
             .bom-card { 
-                page: lista-page; /* Asignar a página vertical */
+                page: lista-page;
                 page-break-before: always !important; 
                 break-before: page !important;
                 border: 1px solid #000 !important; 
@@ -170,10 +163,7 @@
         <h1>🚜 Mis Fincas y Proyectos</h1>
         <button class="btn-new-proj" onclick="createNewProject()">+ Crear Nuevo Proyecto</button>
     </div>
-    
-    <div id="projects-grid" class="projects-grid">
-        <!-- Los proyectos se cargarán aquí -->
-    </div>
+    <div id="projects-grid" class="projects-grid"></div>
 </div>
 
 <!-- PANTALLA 2: ENTORNO CAD -->
@@ -185,11 +175,10 @@
         <input type="text" id="global-project-name" class="global-proj-input" oninput="saveCurrentProjectName()">
     </div>
 
-    <!-- TABS (Botones Corregidos) -->
+    <!-- TABS -->
     <div class="tab-bar no-print">
         <button id="tab-btn-1" class="tab-btn active" onclick="switchTab(1)">🏛️ PLANO 1: BOMBEO</button>
         <button id="tab-btn-2" class="tab-btn" onclick="switchTab(2)">🌊 PLANO 2: FILTRADO</button>
-        <!-- ¡ELIMINADO EL STYLE INLINE OSCURO PARA EVITAR CONFUSIÓN! -->
         <button id="tab-btn-3" class="tab-btn" onclick="switchTab(3)">🌐 VISTA 3D REALISTA</button>
     </div>
 
@@ -208,7 +197,7 @@
                     <label>Diámetro Tubería Impulsión (Bombas):</label>
                     <select id="param-pump-dia" class="form-control" onchange="updateDrawing()">
                         <option value="2">2" (Pulgadas)</option>
-                        <option value="3">3" (Pulgadas)</option>
+                        <option value="3" selected>3" (Pulgadas)</option>
                         <option value="4">4" (Pulgadas)</option>
                     </select>
                 </div>
@@ -216,7 +205,7 @@
                     <label>Diámetro Tubería Pozo / Succión:</label>
                     <select id="param-well-dia" class="form-control" onchange="updateDrawing()">
                         <option value="3">3" (Pulgadas)</option>
-                        <option value="4">4" (Pulgadas)</option>
+                        <option value="4" selected>4" (Pulgadas)</option>
                         <option value="6">6" (Pulgadas)</option>
                     </select>
                 </div>
@@ -227,7 +216,7 @@
                     <label>Diámetro Tubería Colectores:</label>
                     <select id="param-header-dia" class="form-control" onchange="updateDrawing()">
                         <option value="4">4" (Pulgadas)</option>
-                        <option value="6">6" (Pulgadas)</option>
+                        <option value="6" selected>6" (Pulgadas)</option>
                         <option value="8">8" (Pulgadas)</option>
                     </select>
                 </div>
@@ -238,7 +227,7 @@
                     <label>Cantidad de Filtros en Paralelo:</label>
                     <select id="param-filter-count" class="form-control" onchange="updateDrawing()">
                         <option value="2">2 Filtros</option>
-                        <option value="3">3 Filtros</option>
+                        <option value="3" selected>3 Filtros</option>
                         <option value="4">4 Filtros</option>
                     </select>
                 </div>
@@ -246,13 +235,13 @@
                     <label>Diámetro de Conexión de Filtros:</label>
                     <select id="param-filter-dia" class="form-control" onchange="updateDrawing()">
                         <option value="3">3" (Pulgadas)</option>
-                        <option value="4">4" (Pulgadas)</option>
+                        <option value="4" selected>4" (Pulgadas)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Tipo de Filtro:</label>
                     <select id="param-filter-type" class="form-control" onchange="updateDrawing()">
-                        <option value="baldr">BALDR 4" H-Style</option>
+                        <option value="baldr" selected>BALDR 4" H-Style</option>
                         <option value="doble">Netafim 4" Twin Disc</option>
                     </select>
                 </div>
@@ -261,7 +250,7 @@
 
         <!-- VISOR -->
         <div class="viewer-card">
-            <!-- Título que solo aparecerá en el PDF Impreso -->
+            <!-- AQUÍ ESTABA EL BUG: Esta etiqueta desapareció y rompía la creación de proyectos -->
             <h2 id="print-title" class="print-only">Proyecto</h2>
             
             <svg id="cad-canvas" class="svg-wrapper" viewBox="0 0 1440 760" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -312,27 +301,14 @@
     let is3DInitialized = false;
     let renderRequested = false; 
 
-    // INICIALIZACIÓN
     window.onload = function() {
         loadProjectsManager();
     };
 
     function loadProjectsManager() {
         const savedProjects = localStorage.getItem('agroCadProjectsList');
-        const oldLegacyData = localStorage.getItem('agroCadData');
-
         if (savedProjects) {
             projects = JSON.parse(savedProjects);
-        } else if (oldLegacyData) {
-            const oldData = JSON.parse(oldLegacyData);
-            const migratedProject = {
-                id: Date.now().toString(),
-                name: oldData.projName || "Mi Primer Proyecto",
-                data: oldData
-            };
-            projects = [migratedProject];
-            saveProjectsToStorage();
-            localStorage.removeItem('agroCadData');
         } else {
             projects = [];
         }
@@ -404,7 +380,6 @@
     // ==========================================
     // GESTIÓN DEL ENTORNO CAD
     // ==========================================
-
     function openProject(id) {
         currentProjectId = id;
         const proj = projects.find(p => p.id === id);
@@ -412,9 +387,11 @@
         document.getElementById('dashboard-view').style.display = 'none';
         document.getElementById('cad-view').style.display = 'block';
 
-        // Actualizar nombres en UI e Impresión
         document.getElementById('global-project-name').value = proj.name;
-        document.getElementById('print-title').textContent = proj.name;
+        
+        // Seguro Anti-Crash para el título de impresión
+        const titleEl = document.getElementById('print-title');
+        if (titleEl) titleEl.textContent = proj.name;
 
         document.getElementById('param-pump-dia').value = proj.data.pumpDia || '3';
         document.getElementById('param-well-dia').value = proj.data.wellDia || '4';
@@ -442,7 +419,10 @@
         const newName = document.getElementById('global-project-name').value;
         const projIndex = projects.findIndex(p => p.id === currentProjectId);
         projects[projIndex].name = newName;
-        document.getElementById('print-title').textContent = newName; // Actualizar para el PDF
+        
+        const titleEl = document.getElementById('print-title');
+        if (titleEl) titleEl.textContent = newName;
+        
         saveProjectsToStorage();
     }
 
@@ -467,7 +447,6 @@
     // ==========================================
     // LOGICA DE DIBUJO Y LISTADO
     // ==========================================
-
     function switchTab(tabNum) {
         activeTab = tabNum;
         document.getElementById('tab-btn-1').classList.toggle('active', tabNum === 1);
@@ -538,7 +517,7 @@
         (activeTab === 1 ? userBOM1 : userBOM2)[i][f] = v; saveCurrentProjectData();
     }
     function renderBOMTable(arr) {
-        // CORRECCIÓN: Botón rojo con el símbolo ✖ vectorial en negrita en lugar de emoji
+        // CORREGIDO: Botón rojo con aspa (x) clara.
         document.getElementById('bom-tbody').innerHTML = arr.map((r, i) => `
             <tr>
                 <td><input class="editable-textarea item-num" value="${r.id}" onchange="updateBomItem(${i}, 'id', this.value)"></td>
@@ -576,7 +555,7 @@
     }
 
     // ==============================================================================================
-    // RENDER SVG 2D: PLANOS (Intactos)
+    // RENDER SVG 2D: PLANOS
     // ==============================================================================================
     function renderSVG_Plan1(params) {
         const svg = document.getElementById('cad-canvas');
@@ -784,7 +763,7 @@
     }
 
     // ==============================================================================================
-    // MOTOR 3D PROCEDURAL EXACTO
+    // MOTOR 3D
     // ==============================================================================================
     function init3D() {
         const container = document.getElementById('viewer-3d');
@@ -1002,13 +981,11 @@
     }
 </script>
 
-<!-- SERVICE WORKER (MODO OFFLINE PWA) -->
+<!-- SERVICE WORKER -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker Registrado'))
-        .catch(err => console.log('SW Error:', err));
+      navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error:', err));
     });
   }
 </script>
