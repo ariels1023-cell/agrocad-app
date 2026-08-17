@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App CAD Paramétrica</title>
+    
+    <!-- LIBRERÍAS DE THREE.JS PARA EL 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        :root {
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --primary: #0f172a;
+            --primary-light: #1e293b;
+            --accent: #0284c7;
+            --accent-teal: #0d9488;
+            --border: #cbd5e1;
+            --text-main: #334155;
+            --table-header: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-page); color: var(--text-main); padding: 15px; }
+        .app-container { max-width: 1640px; margin: 0 auto; }
+
+        /* TABS */
+        .tab-bar { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .tab-btn { flex: 1; padding: 12px 20px; background: #e2e8f0; border: 2px solid var(--border); border-radius: 8px; font-size: 14.5px; font-weight: 800; cursor: pointer; text-align: center; }
+        .tab-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
+
+        /* PROYECTO & TITLE */
+        .project-header { background: var(--bg-card); padding: 12px 20px; border-radius: 8px; border: 2px solid var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
+        .project-header label { font-weight: 800; color: var(--accent); font-size: 16px; }
+        .global-proj-input { flex: 1; min-width: 250px; border: none; font-size: 22px; font-weight: 800; color: var(--primary); text-transform: uppercase; outline: none; background: transparent; border-bottom: 2px dashed #cbd5e1; padding-bottom: 4px; }
+        .global-proj-input:focus { border-bottom-color: var(--accent); }
+
+        .top-action-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: var(--primary-light); color: #ffffff; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
+        .print-btn { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; }
+
+        /* GRID RESPONSIVE PARA MÓVIL */
+        .main-grid { display: grid; grid-template-columns: 350px 1fr; gap: 16px; align-items: start; }
+        
+        .control-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
+        .panel-title { font-size: 14.5px; font-weight: 800; color: var(--primary); border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin-bottom: 12px; }
+        .form-section { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+        .form-section:last-child { border-bottom: none; margin-bottom: 0; }
+        .section-label { font-size: 11.5px; font-weight: 700; color: var(--accent-teal); text-transform: uppercase; margin-bottom: 6px; display: block; }
+        .form-group label { display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 3px; }
+        .form-control { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12.5px; }
+
+        /* VIEWER */
+        .viewer-card { background: var(--bg-card); border: 2px solid var(--primary); border-radius: 8px; padding: 12px; position: relative; }
+        .svg-wrapper, #viewer-3d { width: 100%; height: 620px; background-color: #fafbfc; border: 1px solid #e2e8f0; border-radius: 4px; }
+        #viewer-3d { background: radial-gradient(circle, #f8fafc 0%, #cbd5e1 100%); display: none; overflow: hidden; }
+
+        /* BOM */
+        .bom-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-top: 16px; overflow-x: auto; }
+        .bom-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-action, .btn-reset, .btn-share { color: white; border: none; padding: 7px 12px; border-radius: 4px; font-weight: 700; font-size: 11.5px; cursor: pointer; }
+        .btn-action { background: #0d9488; }
+        .btn-reset { background: #64748b; }
+        .btn-share { background: #2563eb; }
+        .btn-del { background: #ef4444; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; min-width: 600px; }
+        th { background: var(--table-header); color: #ffffff; text-align: left; padding: 10px 12px; font-size: 11.5px; }
+        td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .editable-textarea { width: 100%; min-height: 40px; padding: 6px 8px; border: 1px solid transparent; border-radius: 4px; font-size: 13.5px; font-family: inherit; background: transparent; resize: none; overflow: visible; }
+        .editable-textarea:hover { border-color: var(--border); background: #ffffff; }
+        .editable-textarea:focus { outline: none; border-color: var(--accent); background: #ffffff; }
+        .item-num { font-weight: 800; color: var(--primary); background: #e2e8f0; padding: 6px 10px; border-radius: 6px; text-align: center; width: 45px; }
+
+        /* ========================================================= */
+        /* REGLAS MÁGICAS PARA MÓVIL (PONE EL PLANO ARRIBA DEL MENÚ) */
+        /* ========================================================= */
+        @media (max-width: 1250px) { 
+            .main-grid { display: flex; flex-direction: column; } 
+            .viewer-card { order: 1; width: 100%; } /* El plano pasa al 1er lugar */
+            .control-panel { order: 2; width: 100%; } /* El menú pasa al 2do lugar */
+        }
+
+        @media (max-width: 768px) {
+            .svg-wrapper, #viewer-3d { height: 450px !important; } /* Altura optimizada para móvil */
+            .global-proj-input { font-size: 18px; }
+            .tab-btn { padding: 10px; font-size: 12px; }
+        }
+
+        /* IMPRESIÓN */
+        @page { size: A4 portrait; margin: 10mm; }
+        @page landscape-page { size: A4 landscape; margin: 6mm; }
+        @media print {
+            body { background-color: #ffffff !important; padding: 0 !important; }
+            .no-print { display: none !important; }
+            .main-grid { display: block !important; }
+            .project-header, .viewer-card, .main-grid { page: landscape-page; }
+            .project-header { border: 2px solid #000 !important; padding: 10px !important; margin-bottom: 10px !important; }
+            .global-proj-input { font-size: 24pt !important; color: #000 !important; border: none !important; }
+            .viewer-card { border: 2px solid #000 !important; padding: 4px !important; margin-bottom: 0 !important; page-break-inside: avoid; }
+            .svg-wrapper { max-height: 80vh !important; height: 80vh !important; width: 100% !important; border: none !important; }
+            .bom-card { page-break-before: always !important; border: 1px solid #000 !important; padding: 8px !important; margin-top: 0 !important; }
+            .editable-textarea { border: none !important; background: transparent !important; padding: 2px 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- TABS -->
+    <div class="tab-bar no-print">
+        <button id="tab-btn-1" class="tab-btn active" onclick="switchTab(1)">🏛️ PLANO 1: BOMBEO</button>
+        <button id="tab-btn-2" class="tab-btn" onclick="switchTab(2)">🌊 PLANO 2: FILTRADO</button>
+        <button id="tab-btn-3" class="tab-btn" onclick="switchTab(3)" style="background:#0f172a; color:#fff;">🌐 VISTA 3D REALISTA</button>
+    </div>
+
+    <!-- NOMBRE DEL PROYECTO GLOBAL -->
+    <div class="project-header">
+        <label>PROYECTO:</label>
+        <input type="text" id="global-project-name" class="global-proj-input" value="Estación de bombeo de 20 acres" oninput="saveState()">
+    </div>
+
+    <div class="top-action-bar no-print">
+        <div><strong id="lbl-top-view">VISTA ACTIVA: PLANO 1</strong> • Auto-guardado Activado 💾</div>
+        <button class="print-btn" onclick="window.print()">🖨️ IMPRIMIR PLANO Y BOM</button>
+    </div>
+
+    <div class="main-grid">
+        <!-- PARÁMETROS (AHORA SE PONDRÁN DEBAJO DEL PLANO EN MÓVIL) -->
+        <div class="control-panel no-print">
+            <div class="panel-title"><span>⚙️ PARÁMETROS DEL SISTEMA</span></div>
+            <div class="form-section">
+                <span class="section-label">1. Configuración de Bombeo</span>
+                <div class="form-group">
+                    <label>Diámetro Tubería Impulsión (Bombas):</label>
+                    <select id="param-pump-dia" class="form-control" onchange="updateDrawing()">
+                        <option value="2">2" (Pulgadas)</option>
+                        <option value="3" selected>3" (Pulgadas)</option>
+                        <option value="4">4" (Pulgadas)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Diámetro Tubería Pozo / Succión:</label>
+                    <select id="param-well-dia" class="form-control" onchange="updateDrawing()">
+                        <option value="3">3" (Pulgadas)</option>
+                        <option value="4" selected>4" (Pulgadas)</option>
+                        <option value="6">6" (Pulgadas)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-section">
+                <span class="section-label">2. Colector Principal</span>
+                <div class="form-group">
+                    <label>Diámetro Tubería Colectores:</label>
+                    <select id="param-header-dia" class="form-control" onchange="updateDrawing()">
+                        <option value="4">4" (Pulgadas)</option>
+                        <option value="6" selected>6" (Pulgadas)</option>
+                        <option value="8">8" (Pulgadas)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-section">
+                <span class="section-label">3. Batería de Filtros</span>
+                <div class="form-group">
+                    <label>Cantidad de Filtros en Paralelo:</label>
+                    <select id="param-filter-count" class="form-control" onchange="updateDrawing()">
+                        <option value="2">2 Filtros</option>
+                        <option value="3" selected>3 Filtros</option>
+                        <option value="4">4 Filtros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Diámetro de Conexión de Filtros:</label>
+                    <select id="param-filter-dia" class="form-control" onchange="updateDrawing()">
+                        <option value="3">3" (Pulgadas)</option>
+                        <option value="4" selected>4" (Pulgadas)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Filtro:</label>
+                    <select id="param-filter-type" class="form-control" onchange="updateDrawing()">
+                        <option value="baldr" selected>BALDR 4" H-Style</option>
+                        <option value="doble">Netafim 4" Twin Disc</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISOR (AHORA APARECERÁ ARRIBA EN MÓVIL) -->
+        <div class="viewer-card">
+            <svg id="cad-canvas" class="svg-wrapper" viewBox="0 0 1440 760" xmlns="http://www.w3.org/2000/svg"></svg>
+            <div id="viewer-3d"></div>
+            <div id="hint-3d" style="display:none; position:absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,0.85); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; pointer-events: none;">
+                🖱️ Rotar | 🖱️ Zoom | 🖱️ Desplazar
+            </div>
+        </div>
+    </div>
+
+    <!-- BOM -->
+    <div class="bom-card" id="bom-container">
+        <div class="panel-title" style="margin-bottom: 6px;">
+            <span id="lbl-bom-title">📋 LISTADO DE COMPRA Y MATERIALES</span>
+            <div class="bom-header-actions no-print">
+                <button class="btn-action" onclick="addBomRow()">➕ Agregar Ítem</button>
+                <button class="btn-reset" onclick="resetCurrentBOM()">🔄 Restaurar</button>
+                <button class="btn-share" onclick="shareBOM()">📤 Compartir / CSV</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 7%;">Ítem N°</th>
+                    <th style="width: 45%;">Elemento (Nombre y Diámetro)</th>
+                    <th style="width: 17%;">Cantidad</th>
+                    <th style="width: 26%;">Especificación / Aplicación</th>
+                    <th style="width: 5%; text-align: center;" class="no-print">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="bom-tbody"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    let activeTab = 1; 
+    let userBOM1 = null;
+    let userBOM2 = null;
+
+    // ---- VARIABLES 3D ----
+    let scene, camera, renderer, controls;
+    let is3DInitialized = false;
+    let renderRequested = false; // Control de Batería
+
+    // ==========================================
+    // SISTEMA DE AUTO-GUARDADO (LOCAL STORAGE)
+    // ==========================================
+    function saveState() {
+        const state = {
+            projName: document.getElementById('global-project-name').value,
+            pumpDia: document.getElementById('param-pump-dia').value,
+            wellDia: document.getElementById('param-well-dia').value,
+            headerDia: document.getElementById('param-header-dia').value,
+            fCount: document.getElementById('param-filter-count').value,
+            fDia: document.getElementById('param-filter-dia').value,
+            fType: document.getElementById('param-filter-type').value,
+            bom1: userBOM1,
+            bom2: userBOM2
+        };
+        localStorage.setItem('agroCadData', JSON.stringify(state));
+    }
+
+    function loadState() {
+        const saved = localStorage.getItem('agroCadData');
+        if (saved) {
+            const state = JSON.parse(saved);
+            document.getElementById('global-project-name').value = state.projName || 'Proyecto Agrícola';
+            document.getElementById('param-pump-dia').value = state.pumpDia || '3';
+            document.getElementById('param-well-dia').value = state.wellDia || '4';
+            document.getElementById('param-header-dia').value = state.headerDia || '6';
+            document.getElementById('param-filter-count').value = state.fCount || '3';
+            document.getElementById('param-filter-dia').value = state.fDia || '4';
+            document.getElementById('param-filter-type').value = state.fType || 'baldr';
+            userBOM1 = state.bom1 || getDefaultBOM1();
+            userBOM2 = state.bom2 || getDefaultBOM2();
+        } else {
+            userBOM1 = getDefaultBOM1();
+            userBOM2 = getDefaultBOM2();
+        }
+    }
+
+    // ==========================================
+    // COMPARTIR POR WHATSAPP / CSV
+    // ==========================================
+    function shareBOM() {
+        const arr = activeTab === 1 ? userBOM1 : userBOM2;
+        const projName = document.getElementById('global-project-name').value;
+        const planoName = activeTab === 1 ? 'Bombeo' : 'Filtrado';
+        
+        let text = `🚜 *PROYECTO:* ${projName}\n📋 *LISTADO DE COMPRAS:* ${planoName}\n\n`;
+        arr.forEach(i => {
+            text += `*${i.id}.* ${i.desc}\n- Cantidad: ${i.qty}\n- Spec: ${i.spec}\n\n`;
+        });
+
+        if (navigator.share) {
+            navigator.share({ title: `Listado - ${projName}`, text: text }).catch(err => console.log('Error al compartir', err));
+        } else {
+            let csvContent = "data:text/csv;charset=utf-8,Item,Elemento,Cantidad,Especificacion\n";
+            arr.forEach(i => {
+                let desc = i.desc.replace(/"/g, '""');
+                let spec = i.spec.replace(/"/g, '""');
+                csvContent += `${i.id},"${desc}","${i.qty}","${spec}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `BOM_${planoName}.csv`);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+    }
+
+    function getDefaultBOM1() {
+        return [
+            { id: '1', desc: 'Válvula Check de Pie 4"', qty: '1 unidad', spec: 'Cuerpo plástico PVC-U resistente.' },
+            { id: '2', desc: 'Tubería PVC Schedule 40 de Succión — 4"', qty: '40 ft', spec: 'Aspiración interior pozo.' },
+            { id: '3', desc: 'Codo 90° PVC Sch 40 — 4"', qty: '1 unidad', spec: 'Cambio de dirección entrada bomba.' },
+            { id: '4', desc: 'Brida (Flange) PVC Sch 40 — 4"', qty: '1 unidad', spec: 'Acople a la bomba.' },
+            { id: '5', desc: 'Junta de Neopreno (Gasket) — 4"', qty: '2 unidades', spec: 'Juntas de sellado bridadas.' },
+            { id: '6', desc: 'Tornillos / Pernos para Flange — 5/8"', qty: '16 unidades', spec: 'Acero inoxidable.' },
+            { id: '7', desc: 'Válvula Check In-Line — 3"', qty: '2 unidades', spec: 'Antirretorno descarga de bombas.' },
+            { id: '8', desc: 'Tee Reducida PVC Sch 40 — 6" × 3"', qty: '1 unidad', spec: 'Derivación impulsión Bomba 2.' },
+            { id: '9', desc: 'Codo 90° PVC Sch 40 — 6"', qty: '1 unidad', spec: 'Conexión Bomba 1 al cabezal.' },
+            { id: '10', desc: 'Reducción Bushing PVC Sch 40 — 6" × 3"', qty: '1 unidad', spec: 'Inserto en codo de Bomba 1.' }
+        ];
+    }
+
+    function getDefaultBOM2() {
+        const filterCount = parseInt(document.getElementById('param-filter-count').value) || 3;
+        const filterDia = document.getElementById('param-filter-dia').value + '"';
+        const headerDia = document.getElementById('param-header-dia').value + '"';
+        const filterType = document.getElementById('param-filter-type').value;
+        const numFlanges = filterCount * 2;
+        const numBolts = numFlanges * 8;
+        const numTees = (filterCount - 1) * 2;
+
+        let filterName = `BALDR 4" H-Style Screen Filter — 120 Mesh`;
+        if (filterType === 'doble') filterName = `Filtro Doble Anillas/Discos ${filterDia} (120 Mesh)`;
+
+        return [
+            { id: '1', desc: filterName, qty: `${filterCount} unidades`, spec: 'Conexión roscada macho MNPT, 145 PSI.' },
+            { id: '2', desc: `Brida Van Stone PVC Sch 40 ${filterDia}`, qty: `${numFlanges} unidades`, spec: 'Anillo giratorio Sch 40 y rosca hembra NPT.' },
+            { id: '3', desc: `Juntas EPDM ${filterDia} + Pernos Inox 304`, qty: `${numFlanges} juntas + ${numBolts} tornillos`, spec: `Suministrar exacto: 8 agujeros por brida.` },
+            { id: '4', desc: `Válvula de Mariposa — 4"`, qty: `${numFlanges} unidades`, spec: 'Cuerpo 100% Plástico PVC. Aislamiento filtro.' },
+            { id: '5', desc: `Tubería PVC Sch 40 — 6"`, qty: '24.0 ft', spec: 'Tubería principal para cabezales.' },
+            { id: '6', desc: `Tubería PVC Sch 40 — 4"`, qty: '20.0 ft', spec: `Para cortar niples de bajada en los filtros.` },
+            { id: '7', desc: `Codo 90° Sch 40 PVC + Reducción Bushing — ${headerDia} × ${filterDia}`, qty: '2 juegos', spec: 'Cierra extremos de colectores.' },
+            { id: '8', desc: `Codo 90° PVC Sch 40 — 6"`, qty: '2 unidades', spec: 'Codos para bajada a la red de riego.' },
+            { id: '9', desc: `Tee Reducida Sch 40 para Derivación — ${headerDia} × ${filterDia}`, qty: `${numTees} unidades`, spec: 'Derivaciones a filtros intermedios.' },
+            { id: '10', desc: `Collarín de Derivación (*Saddle Clamp*) — ${headerDia} × 1"`, qty: '1 unidad', spec: 'Instalada en colector superior para ventosa.' },
+            { id: '11', desc: 'Niples Roscados PVC 1" MNPT (Longitud 2")', qty: '2 unidades', spec: 'Para conectar Collarín ↔ Válvula ↔ Ventosa.' },
+            { id: '12', desc: 'Válvula de Bola PVC 1" FNPT', qty: '1 unidad', spec: 'Aislamiento de Ventosa de aire.' },
+            { id: '13', desc: 'Ventosa Alivio de Aire Cinética / Trifuncional — 1"', qty: '1 unidad', spec: 'Expulsa vacíos en el cabezal.' },
+            { id: '14', desc: '4" Sch. 80 Van Stone Flange (Socket)', qty: `${numFlanges} unidades`, spec: 'Brida 4" ANSI 150.' },
+            { id: '15', desc: 'Adaptadores PVC Rosca a Flange 4"', qty: `${numFlanges} unidades`, spec: 'Para conectar el cuerpo del filtro a la brida.'}
+        ];
+    }
+
+    function switchTab(tabNum) {
+        activeTab = tabNum;
+        document.getElementById('tab-btn-1').classList.toggle('active', tabNum === 1);
+        document.getElementById('tab-btn-2').classList.toggle('active', tabNum === 2);
+        document.getElementById('tab-btn-3').classList.toggle('active', tabNum === 3);
+
+        const svgViewer = document.getElementById('cad-canvas');
+        const threeViewer = document.getElementById('viewer-3d');
+        const hint3d = document.getElementById('hint-3d');
+        const bomContainer = document.getElementById('bom-container');
+
+        if (tabNum === 1 || tabNum === 2) {
+            svgViewer.style.display = 'block';
+            threeViewer.style.display = 'none';
+            hint3d.style.display = 'none';
+            bomContainer.style.display = 'block';
+            document.getElementById('lbl-top-view').textContent = (tabNum === 1) ? 'VISTA ACTIVA: PLANO 1 (BOMBEO)' : 'VISTA ACTIVA: PLANO 2 (FILTRADO)';
+        } else {
+            svgViewer.style.display = 'none';
+            threeViewer.style.display = 'block';
+            hint3d.style.display = 'block';
+            bomContainer.style.display = 'none'; 
+            document.getElementById('lbl-top-view').textContent = 'VISTA ACTIVA: ENTORNO 3D (OPTIMIZADO)';
+            if (!is3DInitialized) init3D();
+        }
+        updateDrawing();
+    }
+
+    function updateDrawing() {
+        const filterCount = parseInt(document.getElementById('param-filter-count').value);
+        const filterType = document.getElementById('param-filter-type').value;
+        const headerDia = document.getElementById('param-header-dia').value;
+
+        if (activeTab === 1) { renderSVG_Plan1({ headerDia: headerDia + '"' }); renderBOMTable(userBOM1); }
+        else if (activeTab === 2) { renderSVG_Plan2({ filterCount, filterType, headerDia: headerDia + '"', filterDia: '4"' }); renderBOMTable(userBOM2); }
+        else if (activeTab === 3) { build3DModel(filterCount, filterType); }
+        
+        saveState();
+    }
+
+    function resetCurrentBOM() {
+        if (confirm('¿Restaurar lista por defecto?')) {
+            if (activeTab === 1) { userBOM1 = getDefaultBOM1(); renderBOMTable(userBOM1); }
+            else { userBOM2 = getDefaultBOM2(); renderBOMTable(userBOM2); }
+            saveState();
+        }
+    }
+    function addBomRow() {
+        const arr = activeTab === 1 ? userBOM1 : userBOM2;
+        arr.push({ id: String(arr.length+1), desc: 'Nuevo Ítem', qty: '1 unidad', spec: '' });
+        renderBOMTable(arr); saveState();
+    }
+    function deleteBomRow(i) {
+        if (confirm('¿Eliminar ítem?')) {
+            const arr = activeTab === 1 ? userBOM1 : userBOM2;
+            arr.splice(i, 1); renderBOMTable(arr); saveState();
+        }
+    }
+    function updateBomItem(i, f, v) {
+        (activeTab === 1 ? userBOM1 : userBOM2)[i][f] = v; saveState();
+    }
+    function renderBOMTable(arr) {
+        document.getElementById('bom-tbody').innerHTML = arr.map((r, i) => `
+            <tr>
+                <td><input class="editable-textarea item-num" value="${r.id}" onchange="updateBomItem(${i}, 'id', this.value)"></td>
+                <td><textarea class="editable-textarea" rows="2" style="font-weight:600;" onchange="updateBomItem(${i}, 'desc', this.value)">${r.desc}</textarea></td>
+                <td><textarea class="editable-textarea" rows="2" style="font-weight:700; color:#15803d; background:#dcfce7;" onchange="updateBomItem(${i}, 'qty', this.value)">${r.qty}</textarea></td>
+                <td><textarea class="editable-textarea" rows="2" onchange="updateBomItem(${i}, 'spec', this.value)">${r.spec}</textarea></td>
+                <td style="text-align:center;" class="no-print"><button class="btn-del" onclick="deleteBomRow(${i})">❌</button></td>
+            </tr>
+        `).join('');
+    }
+
+    // ==============================================================================================
+    // RENDER SVG 2D: PLANO 1
+    // ==============================================================================================
+    function renderSVG_Plan1(params) {
+        const svg = document.getElementById('cad-canvas');
+        const groundY = 540; const pipeY = 240;   
+        let pipeStrokeWidth = (params.headerDia === '8"') ? 18 : 14;
+
+        svg.innerHTML = `
+            <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="0.8"/><path d="M 20 0 L 20 40 M 0 20 L 40 20" fill="none" stroke="#f1f5f9" stroke-width="0.5"/></pattern>
+                <pattern id="soil" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="20" stroke="#b45309" stroke-width="2.5" opacity="0.3" /></pattern>
+                <marker id="arrBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7"/></marker>
+            </defs>
+            <rect width="1440" height="760" fill="url(#grid)" />
+            <rect x="15" y="15" width="1410" height="730" fill="none" stroke="#0f172a" stroke-width="2.5" />
+            <rect x="20" y="${groundY}" width="1400" height="200" fill="url(#soil)" opacity="0.4" />
+            <line x1="20" y1="${groundY}" x2="1420" y2="${groundY}" stroke="#92400e" stroke-width="3" stroke-dasharray="8 4"/>
+            <text x="280" y="${groundY - 10}" font-size="12" font-weight="bold" fill="#92400e">NIVEL 0.00 — PISO FINITO CASETA DE BOMBEO / SUELO</text>
+            
+            <g transform="translate(350, 0)">
+                <line x1="0" y1="${groundY}" x2="0" y2="${pipeY}" stroke="#0284c7" stroke-width="10"/>
+                <line x1="0" y1="${groundY - 60}" x2="0" y2="${groundY - 100}" stroke="#ffffff" stroke-width="3" marker-end="url(#arrBlue)"/>
+                <polygon points="0,${pipeY + 80} -12,${pipeY + 98} 12,${pipeY + 98}" fill="#0284c7" stroke="#ffffff" stroke-width="1"/>
+                <rect x="-80" y="${pipeY + 80}" width="65" height="18" fill="#ffffff" rx="2"/>
+                <text x="-18" y="${pipeY + 93}" font-size="10.5" font-weight="bold" fill="#0369a1" text-anchor="end">V-CHECK 3"</text>
+                <circle cx="0" cy="${pipeY}" r="11" fill="#ffffff" stroke="#0284c7" stroke-width="3"/>
+                <rect x="-24" y="${pipeY - 34}" width="180" height="22" fill="#e0f2fe" rx="4" stroke="#0369a1" stroke-width="1.5"/>
+                <text x="66" y="${pipeY - 19}" font-size="10.5" font-weight="bold" fill="#0369a1" text-anchor="middle">CODO 6" + BUSHING 6" × 3"</text>
+                <circle cx="0" cy="${groundY - 25}" r="34" fill="#0284c7" stroke="#0f172a" stroke-width="3"/>
+                <text x="0" y="${groundY - 18}" font-size="18" font-weight="800" fill="#ffffff" text-anchor="middle">P1</text>
+                <rect x="-75" y="${groundY + 18}" width="150" height="22" rx="4" fill="#0f172a"/>
+                <text x="0" y="${groundY + 33}" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">BOMBA 1 (EXISTENTE)</text>
+            </g>
+
+            <path d="M 350 ${pipeY} L 1150 ${pipeY}" fill="none" stroke="#0284c7" stroke-width="${pipeStrokeWidth}" stroke-linecap="round"/>
+            <rect x="760" y="${pipeY - 45}" width="260" height="24" fill="#ffffff" rx="4" stroke="#cbd5e1" stroke-width="1"/>
+            <text x="890" y="${pipeY - 29}" font-size="13" font-weight="bold" fill="#0369a1" text-anchor="middle">CABEZAL DE IMPULSIÓN — ${params.headerDia}</text>
+
+            <g transform="translate(680, 0)">
+                <line x1="0" y1="${groundY}" x2="0" y2="700" stroke="#334155" stroke-width="12"/>
+                <line x1="0" y1="640" x2="0" y2="600" stroke="#0284c7" stroke-width="3" marker-end="url(#arrBlue)"/>
+                <rect x="-30" y="685" width="60" height="30" fill="#ffffff" stroke="#0f172a" stroke-width="2.5" rx="4"/>
+                <line x1="-20" y1="700" x2="20" y2="700" stroke="#0284c7" stroke-width="3"/>
+                <rect x="-105" y="665" width="210" height="18" fill="#ffffff" rx="2"/>
+                <text x="0" y="678" font-size="11" font-weight="bold" fill="#0f172a" text-anchor="middle">VÁLVULA CHECK DE PIE 4" (FONDO)</text>
+                <rect x="-110" y="585" width="220" height="24" fill="#0f172a" rx="4"/>
+                <text x="0" y="601" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">TUBO PVC SCH 40 — 4" (40 PIES)</text>
+                <rect x="-24" y="${groundY + 8}" width="48" height="10" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5"/>
+                <text x="-35" y="${groundY + 15}" font-size="10" font-weight="bold" fill="#334155" text-anchor="end">FLANGE 4" + TORNILLOS (×16)</text>
+                <line x1="0" y1="${groundY - 25}" x2="0" y2="${pipeY}" stroke="#d97706" stroke-width="10"/>
+                <polygon points="0,${pipeY + 80} -12,${pipeY + 98} 12,${pipeY + 98}" fill="#d97706" stroke="#ffffff" stroke-width="1"/>
+                <rect x="16" y="${pipeY + 80}" width="65" height="18" fill="#ffffff" rx="2"/>
+                <text x="22" y="${pipeY + 93}" font-size="10.5" font-weight="bold" fill="#b45309" text-anchor="start">V-CHECK 3"</text>
+                <circle cx="0" cy="${pipeY}" r="11" fill="#ffffff" stroke="#d97706" stroke-width="3"/>
+                <rect x="-55" y="${pipeY - 34}" width="110" height="22" fill="#fef3c7" rx="4" stroke="#b45309" stroke-width="1.5"/>
+                <text x="0" y="${pipeY - 19}" font-size="10.5" font-weight="bold" fill="#b45309" text-anchor="middle">TEE 6" × 3"</text>
+                <circle cx="0" cy="${groundY - 25}" r="34" fill="#d97706" stroke="#0f172a" stroke-width="3"/>
+                <text x="0" y="${groundY - 14}" font-size="18" font-weight="800" fill="#ffffff" text-anchor="middle">P2</text>
+                <rect x="-75" y="${groundY + 28}" width="150" height="22" rx="4" fill="#0f172a"/>
+                <text x="0" y="${groundY + 43}" font-size="11" font-weight="bold" fill="#ffffff" text-anchor="middle">BOMBA 2 (PARALELO)</text>
+            </g>
+
+            <path d="M 1150 ${pipeY} L 1380 ${pipeY}" fill="none" stroke="#0284c7" stroke-width="${pipeStrokeWidth}" stroke-dasharray="14 8"/>
+            <circle cx="1150" cy="${pipeY}" r="7" fill="#0369a1"/>
+            <rect x="1090" y="${pipeY - 18}" width="310" height="36" fill="#0f172a" rx="6" stroke="#0369a1" stroke-width="2"/>
+            <text x="1245" y="${pipeY - 3}" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">→ TUBERÍA EXISTENTE 6"</text>
+            <text x="1245" y="${pipeY + 12}" font-size="11" fill="#93c5fd" text-anchor="middle">(Hacia Cabezal Exterior)</text>
+        `;
+    }
+
+    // ==============================================================================================
+    // RENDER SVG 2D: PLANO 2 (CABEZAL EXTERIOR CON COTAS)
+    // ==============================================================================================
+    function renderSVG_Plan2(params) {
+        const svg = document.getElementById('cad-canvas');
+        const topY = 200, bottomY = 500, underY = 670, groundY = 580, headerY = 630; 
+        const filterStartX = 460, filterEndX = 960;
+        const filterStep = (params.filterCount > 1) ? (filterEndX - filterStartX) / (params.filterCount - 1) : 0;
+        let pipeStrokeWidth = (params.headerDia === '8"') ? 18 : 14;
+
+        let html = `
+            <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="0.8"/><path d="M 20 0 L 20 40 M 0 20 L 40 20" fill="none" stroke="#f1f5f9" stroke-width="0.5"/></pattern>
+                <pattern id="soil" width="20" height="20" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="20" stroke="#b45309" stroke-width="2.5" opacity="0.3" /></pattern>
+                <marker id="arrBlue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#0284c7"/></marker>
+                <marker id="arrTeal" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#0d9488"/></marker>
+            </defs>
+            <rect width="1440" height="760" fill="url(#grid)" />
+            <rect x="15" y="15" width="1410" height="730" fill="none" stroke="#0f172a" stroke-width="2.5" />
+            <g transform="translate(45, 45)">
+                <rect width="340" height="75" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" rx="6"/>
+                <text x="15" y="22" font-size="12" font-weight="800" fill="#0f172a">📌 NOTA DE MONTAJE EN CAMPO:</text>
+                <text x="15" y="42" font-size="11.5" font-weight="600" fill="#334155">• Separación Mínima: 24" (2'-0") entre centros según</text>
+                <text x="25" y="58" font-size="11" fill="#64748b">ancho del cuerpo BALDR 4" para mantenimiento.</text>
+            </g>
+            <rect x="20" y="${groundY}" width="1400" height="160" fill="url(#soil)" opacity="0.4" />
+            <line x1="20" y1="${groundY}" x2="1420" y2="${groundY}" stroke="#92400e" stroke-width="3" stroke-dasharray="8 4"/>
+            <text x="300" y="${groundY - 10}" font-size="12" font-weight="bold" fill="#92400e">NIVEL 0.00 — SUELO / GRAVA DE ZONA SEGURA DE FILTRADO</text>
+
+            <path d="M 80 ${headerY} L ${filterEndX} ${headerY}" fill="none" stroke="#0284c7" stroke-width="${pipeStrokeWidth}" stroke-linecap="round"/>
+            <circle cx="240" cy="${headerY}" r="9" fill="#ffffff" stroke="#0284c7" stroke-width="3"/>
+            <rect x="55" y="${headerY - 38}" width="210" height="26" fill="#0f172a" rx="5"/>
+            <text x="160" y="${headerY - 21}" font-size="11.5" font-weight="bold" fill="#ffffff" text-anchor="middle">← DESDE TUBERÍA EXISTENTE</text>
+
+            <path d="M ${filterStartX} ${topY} L 1140 ${topY} L 1140 ${underY} L 1380 ${underY}" fill="none" stroke="#0d9488" stroke-width="${pipeStrokeWidth}" stroke-linejoin="round"/>
+            <circle cx="1140" cy="${topY}" r="9" fill="#ffffff" stroke="#0d9488" stroke-width="3"/>
+            <circle cx="1140" cy="${underY}" r="9" fill="#ffffff" stroke="#0d9488" stroke-width="3"/>
+
+            <rect x="570" y="${topY - 35}" width="280" height="24" fill="#ffffff" rx="4" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="710" y="${topY - 18}" font-size="13" font-weight="bold" fill="#0f766e" text-anchor="middle">CABEZAL SUPERIOR — ${params.headerDia} SCH 40</text>
+            <rect x="540" y="${underY + 16}" width="340" height="26" fill="#ffffff" rx="4" stroke="#e2e8f0" stroke-width="1"/>
+            <text x="710" y="${underY + 34}" font-size="13.5" font-weight="bold" fill="#0369a1" text-anchor="middle">CABEZAL INFERIOR (ENTERRADO) — ${params.headerDia} SCH 40</text>
+
+            <g transform="translate(1140, 360)">
+                <circle cx="0" cy="0" r="28" fill="#ffffff" stroke="#0f172a" stroke-width="3"/>
+                <line x1="-20" y1="-20" x2="20" y2="20" stroke="#0f172a" stroke-width="3"/>
+                <line x1="-20" y1="20" x2="20" y2="-20" stroke="#0f172a" stroke-width="3"/>
+                <circle cx="0" cy="0" r="8" fill="#0d9488" />
+                <rect x="35" y="-22" width="145" height="44" rx="6" fill="#0f172a" />
+                <text x="108" y="-3" font-size="12" font-weight="bold" fill="#ffffff" text-anchor="middle">VÁLVULA GENERAL</text>
+                <text x="108" y="14" font-size="11" fill="#99f6e4" text-anchor="middle">${params.headerDia} • Salida Campo</text>
+            </g>
+
+            <rect x="1200" y="${underY - 38}" width="170" height="26" fill="#0f172a" rx="5"/>
+            <text x="1285" y="${underY - 21}" font-size="11.5" font-weight="bold" fill="#ffffff" text-anchor="middle">→ RED GENERAL RIEGO</text>
+        `;
+
+        const centerY = (topY + bottomY) / 2; 
+        for (let i = 0; i < params.filterCount; i++) {
+            const fx = filterStartX + i * filterStep;
+            const isFirst = (i === 0), isLast = (i === params.filterCount - 1);
+            html += `
+                <g transform="translate(${fx}, 0)">
+                    <line x1="0" y1="${bottomY}" x2="0" y2="${topY}" stroke="#334155" stroke-width="8"/>
+                    <line x1="0" y1="${bottomY}" x2="0" y2="${headerY}" stroke="#0284c7" stroke-width="8" stroke-linejoin="round"/>
+                    <line x1="0" y1="${groundY + 30}" x2="0" y2="${groundY + 10}" stroke="#0284c7" stroke-width="3" marker-end="url(#arrBlue)"/>
+                    <line x1="0" y1="${topY + 50}" x2="0" y2="${topY + 30}" stroke="#0d9488" stroke-width="3" marker-end="url(#arrTeal)"/>
+                    <circle cx="0" cy="${groundY - 60}" r="13" fill="#ffffff" stroke="#0369a1" stroke-width="2.5"/>
+                    <path d="M -8 -8 L 8 8 M -8 8 L 8 -8" stroke="#0369a1" stroke-width="2"/>
+                    <rect x="-65" y="${groundY - 69}" width="48" height="18" fill="#ffffff" rx="2"/>
+                    <text x="-18" y="${groundY - 56}" font-size="11" font-weight="bold" fill="#0369a1" text-anchor="end">V-ENT ${params.filterDia}</text>
+                    <rect x="-14" y="${centerY + 45}" width="28" height="8" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" rx="1"/>
+                    <text x="24" y="${centerY + 50}" font-size="9" font-weight="bold" fill="#475569">BRIDA VAN STONE 4"</text>
+            `;
+            if (isFirst) {
+                html += `<circle cx="0" cy="${topY}" r="9" fill="#ffffff" stroke="#0d9488" stroke-width="3"/>
+                         <rect x="-42" y="${topY - 32}" width="84" height="18" fill="#e0f2fe" rx="3" stroke="#0369a1" stroke-width="1"/>
+                         <text x="0" y="${topY - 19}" font-size="9" font-weight="bold" fill="#0369a1" text-anchor="middle">CODO + BUSHING</text>`;
+            } else { html += `<circle cx="0" cy="${topY}" r="6" fill="#0d9488" />`; }
+            if (isLast) {
+                html += `<circle cx="0" cy="${headerY}" r="9" fill="#ffffff" stroke="#0284c7" stroke-width="3"/>
+                         <rect x="-42" y="${headerY - 26}" width="84" height="18" fill="#e0f2fe" rx="3" stroke="#0369a1" stroke-width="1"/>
+                         <text x="0" y="${headerY - 13}" font-size="9" font-weight="bold" fill="#0369a1" text-anchor="middle">CODO + BUSHING</text>`;
+            } else { html += `<circle cx="0" cy="${headerY}" r="6" fill="#0284c7" />`; }
+
+            if (params.filterType === 'baldr') {
+                html += `<rect x="-55" y="${centerY - 24}" width="110" height="48" rx="24" fill="#ffffff" stroke="#0f172a" stroke-width="3"/>
+                         <rect x="-75" y="${centerY - 68}" width="150" height="22" fill="#0f172a" rx="4"/>
+                         <text x="0" y="${centerY - 53}" font-size="11.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FILTRO ${i+1} — BALDR 4"</text>`;
+            } else {
+                html += `<rect x="-44" y="${centerY - 35}" width="32" height="70" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="2.5"/>
+                         <rect x="12" y="${centerY - 35}" width="32" height="70" rx="6" fill="#ffffff" stroke="#0f172a" stroke-width="2.5"/>
+                         <rect x="-75" y="${centerY - 68}" width="150" height="22" fill="#0f172a" rx="4"/>
+                         <text x="0" y="${centerY - 53}" font-size="11.5" font-weight="bold" fill="#ffffff" text-anchor="middle">FILTRO ${i+1} — DOBLE 4"</text>`;
+            }
+            html += `<rect x="-14" y="${centerY - 53}" width="28" height="8" fill="#cbd5e1" stroke="#0f172a" stroke-width="1.5" rx="1"/>
+                     <circle cx="0" cy="${topY + 55}" r="13" fill="#ffffff" stroke="#0f766e" stroke-width="2.5"/>
+                     <path d="M -8 -8 L 8 8 M -8 8 L 8 -8" stroke="#0f766e" stroke-width="2"/>
+                     <rect x="-65" y="${topY + 46}" width="48" height="18" fill="#ffffff" rx="2"/>
+                     <text x="-18" y="${topY + 59}" font-size="11" font-weight="bold" fill="#0f766e" text-anchor="end">V-SAL ${params.filterDia}</text>
+                </g>`;
+        }
+
+        if (params.filterCount > 1) {
+            for (let i = 0; i < params.filterCount - 1; i++) {
+                const x1 = filterStartX + i * filterStep, x2 = filterStartX + (i + 1) * filterStep;
+                const dimY = 140, midX = (x1 + x2) / 2;
+                html += `
+                    <line x1="${x1}" y1="165" x2="${x1}" y2="${dimY - 8}" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="${x2}" y1="165" x2="${x2}" y2="${dimY - 8}" stroke="#475569" stroke-width="1.5"/>
+                    <line x1="${x1}" y1="${dimY}" x2="${x2}" y2="${dimY}" stroke="#0f172a" stroke-width="2"/>
+                    <polygon points="${x1 + 8},${dimY - 4} ${x1},${dimY} ${x1 + 8},${dimY + 4}" fill="#0f172a"/>
+                    <polygon points="${x2 - 8},${dimY - 4} ${x2},${dimY} ${x2 - 8},${dimY + 4}" fill="#0f172a"/>
+                    <rect x="${midX - 105}" y="${dimY - 11}" width="210" height="20" fill="#ffffff" rx="3" stroke="#cbd5e1" stroke-width="1"/>
+                    <text x="${midX}" y="${dimY + 3}" font-size="10.5" font-weight="800" fill="#0f172a" text-anchor="middle">24" (2.0 ft) MÍN. ENTRE CENTROS</text>
+                `;
+            }
+        }
+
+        const ventX = 1050; 
+        html += `
+            <g transform="translate(${ventX}, ${topY})">
+                <rect x="-16" y="-6" width="32" height="12" fill="#0f172a" rx="3"/>
+                <text x="0" y="24" font-size="10.5" font-weight="bold" fill="#0f172a" text-anchor="middle">COLLARÍN 6" × 1" NPT</text>
+                <line x1="0" y1="-6" x2="0" y2="-90" stroke="#0f172a" stroke-width="5"/>
+                <text x="-10" y="-15" font-size="9" font-weight="bold" fill="#475569" text-anchor="end">NIPLE 1"×2"</text>
+                <circle cx="0" cy="-38" r="10" fill="#ffffff" stroke="#854d0e" stroke-width="2"/>
+                <path d="M -6 -6 L 6 6 M -6 6 L 6 -6" stroke="#854d0e" stroke-width="1.5"/>
+                <rect x="18" y="-46" width="115" height="18" fill="#ffffff" rx="3" stroke="#cbd5e1" stroke-width="1"/>
+                <text x="25" y="-33" font-size="9.5" font-weight="bold" fill="#854d0e">V-BOLA 1" (AISLAM.)</text>
+                <text x="10" y="-65" font-size="9" font-weight="bold" fill="#475569" text-anchor="start">NIPLE 1"×2"</text>
+                <circle cx="0" cy="-98" r="16" fill="#fef08a" stroke="#854d0e" stroke-width="2"/>
+                <text x="0" y="-94" font-size="11" font-weight="bold" fill="#854d0e" text-anchor="middle">AIR</text>
+                <rect x="-45" y="-138" width="90" height="20" fill="#ffffff" rx="3" stroke="#854d0e" stroke-width="1"/>
+                <text x="0" y="-124" font-size="11" font-weight="bold" fill="#854d0e" text-anchor="middle">VENTOSA 1"</text>
+            </g>
+        `;
+        svg.innerHTML = html;
+    }
+
+    // ==============================================================================================
+    // MOTOR 3D PROCEDURAL EXACTO 
+    // ==============================================================================================
+    function init3D() {
+        const container = document.getElementById('viewer-3d');
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+        
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.dampingFactor = 0.05;
+
+        // Iluminación
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const spotLight = new THREE.SpotLight(0xffffff, 0.7);
+        spotLight.position.set(20, 60, 40); spotLight.castShadow = true;
+        scene.add(spotLight);
+        const fillLight = new THREE.DirectionalLight(0xaaccff, 0.4);
+        fillLight.position.set(-30, 20, -30); scene.add(fillLight);
+
+        // Suelo
+        const grid = new THREE.GridHelper(120, 120, 0x888888, 0xcccccc);
+        grid.position.y = -2; scene.add(grid);
+
+        is3DInitialized = true;
+
+        // SISTEMA DE AHORRO DE BATERÍA (Solo renderiza al mover la cámara)
+        controls.addEventListener('change', requestRenderIfNotRequested);
+        window.addEventListener('resize', requestRenderIfNotRequested);
+    }
+    
+    function render() {
+        renderer.render(scene, camera);
+        renderRequested = false;
+    }
+    
+    function requestRenderIfNotRequested() {
+        if (!renderRequested) {
+            renderRequested = true;
+            requestAnimationFrame(render);
+        }
+    }
+
+    // --- CONSTRUCTORES DE GEOMETRÍAS ---
+    function createFlange(matBase, matBolt) {
+        const group = new THREE.Group();
+        const base = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.3, 32), matBase);
+        group.add(base);
+        for(let i=0; i<8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.6, 6), matBolt); 
+            bolt.position.set(Math.cos(angle)*0.9, 0, Math.sin(angle)*0.9);
+            group.add(bolt);
+        }
+        return group;
+    }
+
+    function createValve(matBody, matHandle, matMetal) {
+        const group = new THREE.Group();
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.3, 1.2, 32), matBody);
+        group.add(body);
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 1.5, 16), matMetal);
+        stem.rotation.x = Math.PI/2; stem.position.z = 0.9;
+        group.add(stem);
+        const handle = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.2, 0.4), matHandle);
+        handle.position.set(0.8, 0, 1.6);
+        group.add(handle);
+        return group;
+    }
+
+    function build3DModel(filterCount, filterType) {
+        if (!is3DInitialized) return;
+
+        // BARRIDO LIMPIO DE MEMORIA 3D
+        for (let i = scene.children.length - 1; i >= 0; i--) {
+            const obj = scene.children[i];
+            if (obj.isMesh || obj.type === "Group") {
+                scene.remove(obj);
+            }
+        }
+
+        const mBlue = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3 });
+        const mTeal = new THREE.MeshStandardMaterial({ color: 0x0d9488, roughness: 0.3 });
+        const mBlack = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+        const mGrey = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5 });
+        const mSteel = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
+        const mRed = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 });
+        const mYellow = new THREE.MeshStandardMaterial({ color: 0xfef08a, roughness: 0.2 });
+
+        const spacing = 8; 
+        const lastFilterX = (filterCount - 1) * spacing;
+        
+        // 1. ZONA BOMBEO A LA IZQUIERDA
+        const pumpStartX = -30; 
+        const pumpSpacing = 8;
+        
+        for(let p=0; p<2; p++) {
+            const px = pumpStartX + (p * pumpSpacing);
+            
+            const motor = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 3, 32), mGrey);
+            motor.rotation.x = Math.PI/2; 
+            motor.position.set(px, 0.5, -2.5); scene.add(motor);
+            
+            const volute = new THREE.Mesh(new THREE.SphereGeometry(1.8, 32, 32), mBlue);
+            volute.scale.set(1, 1, 0.6); 
+            volute.position.set(px, 0.5, 0); scene.add(volute);
+
+            const suction = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2.5, 32), mGrey);
+            suction.position.set(px, -0.75, 0); scene.add(suction);
+
+            const discharge = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 6, 32), mBlue);
+            discharge.position.set(px, 4.5, 0); scene.add(discharge);
+
+            const checkBody = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 1.8, 32), mGrey);
+            checkBody.position.set(px, 4, 0); scene.add(checkBody);
+            const checkCap = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.0, 16), mGrey);
+            checkCap.rotation.z = Math.PI/2;
+            checkCap.position.set(px + 0.8, 4, 0); scene.add(checkCap);
+            
+            const unionTop = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mBlue);
+            unionTop.position.set(px, 8, 0); scene.add(unionTop);
+        }
+
+        // --- CABEZAL AÉREO DE BOMBAS (AZUL) QUE LUEGO SE ENTIERRA ---
+        const dropX = -12; 
+
+        const headAereoLen = dropX - pumpStartX;
+        const headAereo = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, headAereoLen, 32), mBlue);
+        headAereo.rotation.z = Math.PI/2; 
+        headAereo.position.set(pumpStartX + headAereoLen/2, 8, 0); scene.add(headAereo);
+
+        const codoDropAereo = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mBlue);
+        codoDropAereo.position.set(dropX, 8, 0); scene.add(codoDropAereo);
+
+        const dropPipeAzul = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 10, 32), mBlue);
+        dropPipeAzul.position.set(dropX, 3, 0); scene.add(dropPipeAzul);
+
+        const codoDropEnterrado = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mBlue);
+        codoDropEnterrado.position.set(dropX, -2, 0); scene.add(codoDropEnterrado);
+
+        // 2. COLECTOR INFERIOR ENTERRADO (Azul) - Termina exacto en el último filtro
+        const blueLen = lastFilterX - dropX;
+        const hInf = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, blueLen, 32), mBlue);
+        hInf.rotation.z = Math.PI/2; hInf.position.set(dropX + blueLen/2, -2, 0); scene.add(hInf);
+        
+        const codoAzulFin = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mBlue);
+        codoAzulFin.position.set(lastFilterX, -2, 0); scene.add(codoAzulFin);
+
+        // 3. COLECTOR SUPERIOR (Verde/Teal) - Empieza en el primer filtro hacia la derecha
+        const greenEnd = lastFilterX + 10;
+        const greenLen = greenEnd - 0; 
+        const hSup = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, greenLen, 32), mTeal);
+        hSup.rotation.z = Math.PI/2; hSup.position.set(greenLen/2, 10, 0); scene.add(hSup);
+
+        const codoVerdeInicio = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mTeal);
+        codoVerdeInicio.position.set(0, 10, 0); scene.add(codoVerdeInicio);
+
+        // 4. BATERÍA DE FILTROS 
+        for (let i = 0; i < filterCount; i++) {
+            const posX = i * spacing;
+
+            const riserBot = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 4, 32), mBlue);
+            riserBot.position.set(posX, 0, 0); scene.add(riserBot);
+
+            const vBot = createValve(mGrey, mRed, mSteel); vBot.position.set(posX, 2.5, 0); scene.add(vBot);
+            const fBot = createFlange(mGrey, mSteel); fBot.position.set(posX, 3.3, 0); scene.add(fBot);
+            const adptBot = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.7, 32), mGrey);
+            adptBot.position.set(posX, 3.8, 0); scene.add(adptBot);
+
+            if (filterType === 'baldr') {
+                const fBody = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 6, 32), mBlack);
+                fBody.rotation.x = Math.PI/2; 
+                fBody.position.set(posX, 5.0, 0); scene.add(fBody);
+                const capF = new THREE.Mesh(new THREE.SphereGeometry(1.6, 32, 32), mBlack);
+                capF.position.set(posX, 5.0, 3); scene.add(capF);
+                const capB = new THREE.Mesh(new THREE.SphereGeometry(1.6, 32, 32), mBlack);
+                capB.position.set(posX, 5.0, -3); scene.add(capB);
+                const clamp = new THREE.Mesh(new THREE.TorusGeometry(1.62, 0.08, 16, 64), mSteel);
+                clamp.rotation.x = Math.PI/2; clamp.position.set(posX, 5.0, 0); scene.add(clamp);
+            } else {
+                const fBody = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 3.5, 32), mBlack);
+                fBody.position.set(posX, 5.0, 0); scene.add(fBody);
+            }
+
+            const adptTop = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.7, 32), mGrey);
+            adptTop.position.set(posX, 6.2, 0); scene.add(adptTop);
+            const fTop = createFlange(mGrey, mSteel); fTop.position.set(posX, 6.7, 0); scene.add(fTop);
+            const vTop = createValve(mGrey, mRed, mSteel); vTop.position.set(posX, 7.5, 0); scene.add(vTop);
+            
+            const riserTop = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2, 32), mTeal);
+            riserTop.position.set(posX, 9, 0); scene.add(riserTop);
+        }
+
+        // 5. VENTOSA
+        const ventPosX = lastFilterX + 5;
+        const niple1 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.8, 16), mGrey);
+        niple1.position.set(ventPosX, 10.4, 0); scene.add(niple1);
+        const vBola = new THREE.Mesh(new THREE.SphereGeometry(0.4, 16, 16), mRed);
+        vBola.position.set(ventPosX, 11, 0); scene.add(vBola);
+        const niple2 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.8, 16), mGrey);
+        niple2.position.set(ventPosX, 11.6, 0); scene.add(niple2);
+        const ventosa = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1.2, 32), mYellow);
+        ventosa.position.set(ventPosX, 12.4, 0); scene.add(ventosa);
+
+        // 6. BAJADA CON VÁLVULA GENERAL Y CODOS
+        const elbowTop = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mTeal);
+        elbowTop.position.set(greenEnd, 10, 0); scene.add(elbowTop);
+        
+        const dropPipe1Teal = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 4, 32), mTeal);
+        dropPipe1Teal.position.set(greenEnd, 8, 0); scene.add(dropPipe1Teal);
+        
+        const genValve = createValve(mGrey, mRed, mSteel);
+        genValve.scale.set(1.5, 1.5, 1.5);
+        genValve.position.set(greenEnd, 5, 0); scene.add(genValve);
+
+        const dropPipe2Teal = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 5, 32), mTeal);
+        dropPipe2Teal.position.set(greenEnd, 1.5, 0); scene.add(dropPipe2Teal);
+
+        const elbowBot = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mTeal);
+        elbowBot.position.set(greenEnd, -1, 0); scene.add(elbowBot);
+        
+        const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 4, 32), mTeal);
+        tail.rotation.z = Math.PI/2; tail.position.set(greenEnd + 2, -1, 0); scene.add(tail);
+
+        // Ajuste inicial de la cámara y Forzar Render
+        controls.target.set( (lastFilterX + dropX) / 2 , 4, 0);
+        camera.position.set( (lastFilterX + dropX) / 2 , 20, 50);
+        
+        requestRenderIfNotRequested();
+    }
+
+    // Inicializar Cargando Estado Guardado
+    window.onload = function() {
+        loadState();
+        switchTab(1); 
+    };
+</script>
+</body>
+</html>
