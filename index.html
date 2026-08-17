@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App CAD Paramétrica</title>
+    <title>AgroCAD - Gestor de Proyectos</title>
     
     <!-- LIBRERÍAS DE THREE.JS PARA EL 3D -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -26,21 +26,40 @@
         body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-page); color: var(--text-main); padding: 15px; }
         .app-container { max-width: 1640px; margin: 0 auto; }
 
+        /* ========================================= */
+        /* ESTILOS DEL DASHBOARD (PANTALLA DE INICIO)*/
+        /* ========================================= */
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .dashboard-header h1 { font-size: 24px; font-weight: 900; margin: 0; }
+        .btn-new-proj { background: var(--accent-teal); color: white; border: none; padding: 10px 20px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(13, 148, 136, 0.3); }
+        .btn-new-proj:hover { background: #0f766e; transform: translateY(-2px); }
+
+        .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .project-card { background: var(--bg-card); border: 2px solid var(--border); border-radius: 12px; padding: 20px; transition: 0.2s; cursor: pointer; position: relative; }
+        .project-card:hover { border-color: var(--accent); box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.1); transform: translateY(-3px); }
+        .project-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+        .project-name { font-size: 18px; font-weight: 800; color: var(--primary); margin-bottom: 5px; }
+        .project-details { font-size: 13px; color: var(--text-light); font-weight: 600; }
+        .btn-del-proj { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 6px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-del-proj:hover { background: #ef4444; color: white; }
+
         /* TABS */
         .tab-bar { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
         .tab-btn { flex: 1; padding: 12px 20px; background: #e2e8f0; border: 2px solid var(--border); border-radius: 8px; font-size: 14.5px; font-weight: 800; cursor: pointer; text-align: center; }
         .tab-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
 
         /* PROYECTO & TITLE */
-        .project-header { background: var(--bg-card); padding: 12px 20px; border-radius: 8px; border: 2px solid var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;}
-        .project-header label { font-weight: 800; color: var(--accent); font-size: 16px; }
+        .project-header-bar { background: var(--bg-card); padding: 12px 20px; border-radius: 8px; border: 2px solid var(--accent); margin-bottom: 12px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;}
+        .btn-back { background: var(--primary-light); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px; }
+        .btn-back:hover { background: var(--primary); }
+        .project-header-bar label { font-weight: 800; color: var(--accent); font-size: 16px; }
         .global-proj-input { flex: 1; min-width: 250px; border: none; font-size: 22px; font-weight: 800; color: var(--primary); text-transform: uppercase; outline: none; background: transparent; border-bottom: 2px dashed #cbd5e1; padding-bottom: 4px; }
         .global-proj-input:focus { border-bottom-color: var(--accent); }
 
         .top-action-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: var(--primary-light); color: #ffffff; padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; font-size: 13px; }
         .print-btn { background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; }
 
-        /* GRID RESPONSIVE PARA MÓVIL */
+        /* GRID RESPONSIVE */
         .main-grid { display: grid; grid-template-columns: 350px 1fr; gap: 16px; align-items: start; }
         
         .control-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
@@ -74,41 +93,53 @@
         .editable-textarea:focus { outline: none; border-color: var(--accent); background: #ffffff; }
         .item-num { font-weight: 800; color: var(--primary); background: #e2e8f0; padding: 6px 10px; border-radius: 6px; text-align: center; width: 45px; }
 
-        /* ========================================================= */
-        /* REGLAS MÁGICAS PARA MÓVIL (PONE EL PLANO ARRIBA DEL MENÚ) */
-        /* ========================================================= */
         @media (max-width: 1250px) { 
             .main-grid { display: flex; flex-direction: column; } 
-            .viewer-card { order: 1; width: 100%; } /* El plano pasa al 1er lugar */
-            .control-panel { order: 2; width: 100%; } /* El menú pasa al 2do lugar */
+            .viewer-card { order: 1; width: 100%; } 
+            .control-panel { order: 2; width: 100%; } 
         }
 
         @media (max-width: 768px) {
-            .svg-wrapper, #viewer-3d { height: 450px !important; } /* Altura optimizada para móvil */
+            .svg-wrapper, #viewer-3d { height: 450px !important; } 
             .global-proj-input { font-size: 18px; }
             .tab-btn { padding: 10px; font-size: 12px; }
         }
 
         /* IMPRESIÓN */
-        @page { size: A4 portrait; margin: 10mm; }
-        @page landscape-page { size: A4 landscape; margin: 6mm; }
         @media print {
             body { background-color: #ffffff !important; padding: 0 !important; }
             .no-print { display: none !important; }
             .main-grid { display: block !important; }
-            .project-header, .viewer-card, .main-grid { page: landscape-page; }
-            .project-header { border: 2px solid #000 !important; padding: 10px !important; margin-bottom: 10px !important; }
+            .project-header-bar { border: 2px solid #000 !important; padding: 10px !important; margin-bottom: 10px !important; }
             .global-proj-input { font-size: 24pt !important; color: #000 !important; border: none !important; }
             .viewer-card { border: 2px solid #000 !important; padding: 4px !important; margin-bottom: 0 !important; page-break-inside: avoid; }
             .svg-wrapper { max-height: 80vh !important; height: 80vh !important; width: 100% !important; border: none !important; }
             .bom-card { page-break-before: always !important; border: 1px solid #000 !important; padding: 8px !important; margin-top: 0 !important; }
-            .editable-textarea { border: none !important; background: transparent !important; padding: 2px 0 !important; }
         }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<!-- PANTALLA 1: DASHBOARD DE PROYECTOS -->
+<div id="dashboard-view" class="app-container">
+    <div class="dashboard-header">
+        <h1>🚜 Mis Fincas y Proyectos</h1>
+        <button class="btn-new-proj" onclick="createNewProject()">+ Crear Nuevo Proyecto</button>
+    </div>
+    
+    <div id="projects-grid" class="projects-grid">
+        <!-- Los proyectos se cargarán aquí desde JavaScript -->
+    </div>
+</div>
+
+<!-- PANTALLA 2: ENTORNO CAD (Oculto por defecto) -->
+<div id="cad-view" class="app-container" style="display: none;">
+
+    <div class="project-header-bar no-print">
+        <button class="btn-back" onclick="goToDashboard()">⬅️ Volver</button>
+        <label>PROYECTO ACTIVO:</label>
+        <input type="text" id="global-project-name" class="global-proj-input" oninput="saveCurrentProjectName()">
+    </div>
 
     <!-- TABS -->
     <div class="tab-bar no-print">
@@ -117,19 +148,13 @@
         <button id="tab-btn-3" class="tab-btn" onclick="switchTab(3)" style="background:#0f172a; color:#fff;">🌐 VISTA 3D REALISTA</button>
     </div>
 
-    <!-- NOMBRE DEL PROYECTO GLOBAL -->
-    <div class="project-header">
-        <label>PROYECTO:</label>
-        <input type="text" id="global-project-name" class="global-proj-input" value="Estación de bombeo de 20 acres" oninput="saveState()">
-    </div>
-
     <div class="top-action-bar no-print">
         <div><strong id="lbl-top-view">VISTA ACTIVA: PLANO 1</strong> • Auto-guardado Activado 💾</div>
         <button class="print-btn" onclick="window.print()">🖨️ IMPRIMIR PLANO Y BOM</button>
     </div>
 
     <div class="main-grid">
-        <!-- PARÁMETROS (AHORA SE PONDRÁN DEBAJO DEL PLANO EN MÓVIL) -->
+        <!-- PARÁMETROS -->
         <div class="control-panel no-print">
             <div class="panel-title"><span>⚙️ PARÁMETROS DEL SISTEMA</span></div>
             <div class="form-section">
@@ -138,7 +163,7 @@
                     <label>Diámetro Tubería Impulsión (Bombas):</label>
                     <select id="param-pump-dia" class="form-control" onchange="updateDrawing()">
                         <option value="2">2" (Pulgadas)</option>
-                        <option value="3" selected>3" (Pulgadas)</option>
+                        <option value="3">3" (Pulgadas)</option>
                         <option value="4">4" (Pulgadas)</option>
                     </select>
                 </div>
@@ -146,7 +171,7 @@
                     <label>Diámetro Tubería Pozo / Succión:</label>
                     <select id="param-well-dia" class="form-control" onchange="updateDrawing()">
                         <option value="3">3" (Pulgadas)</option>
-                        <option value="4" selected>4" (Pulgadas)</option>
+                        <option value="4">4" (Pulgadas)</option>
                         <option value="6">6" (Pulgadas)</option>
                     </select>
                 </div>
@@ -157,7 +182,7 @@
                     <label>Diámetro Tubería Colectores:</label>
                     <select id="param-header-dia" class="form-control" onchange="updateDrawing()">
                         <option value="4">4" (Pulgadas)</option>
-                        <option value="6" selected>6" (Pulgadas)</option>
+                        <option value="6">6" (Pulgadas)</option>
                         <option value="8">8" (Pulgadas)</option>
                     </select>
                 </div>
@@ -168,7 +193,7 @@
                     <label>Cantidad de Filtros en Paralelo:</label>
                     <select id="param-filter-count" class="form-control" onchange="updateDrawing()">
                         <option value="2">2 Filtros</option>
-                        <option value="3" selected>3 Filtros</option>
+                        <option value="3">3 Filtros</option>
                         <option value="4">4 Filtros</option>
                     </select>
                 </div>
@@ -176,20 +201,20 @@
                     <label>Diámetro de Conexión de Filtros:</label>
                     <select id="param-filter-dia" class="form-control" onchange="updateDrawing()">
                         <option value="3">3" (Pulgadas)</option>
-                        <option value="4" selected>4" (Pulgadas)</option>
+                        <option value="4">4" (Pulgadas)</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Tipo de Filtro:</label>
                     <select id="param-filter-type" class="form-control" onchange="updateDrawing()">
-                        <option value="baldr" selected>BALDR 4" H-Style</option>
+                        <option value="baldr">BALDR 4" H-Style</option>
                         <option value="doble">Netafim 4" Twin Disc</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- VISOR (AHORA APARECERÁ ARRIBA EN MÓVIL) -->
+        <!-- VISOR -->
         <div class="viewer-card">
             <svg id="cad-canvas" class="svg-wrapper" viewBox="0 0 1440 760" xmlns="http://www.w3.org/2000/svg"></svg>
             <div id="viewer-3d"></div>
@@ -205,7 +230,7 @@
             <span id="lbl-bom-title">📋 LISTADO DE COMPRA Y MATERIALES</span>
             <div class="bom-header-actions no-print">
                 <button class="btn-action" onclick="addBomRow()">➕ Agregar Ítem</button>
-                <button class="btn-reset" onclick="resetCurrentBOM()">🔄 Restaurar</button>
+                <button class="btn-reset" onclick="resetCurrentBOM()">🔄 Restaurar Lista Original</button>
                 <button class="btn-share" onclick="shareBOM()">📤 Compartir / CSV</button>
             </div>
         </div>
@@ -222,25 +247,169 @@
             <tbody id="bom-tbody"></tbody>
         </table>
     </div>
-
 </div>
 
 <script>
+    // ==========================================
+    // ESTADO GLOBAL Y GESTOR DE PROYECTOS
+    // ==========================================
+    let projects = [];
+    let currentProjectId = null;
+
     let activeTab = 1; 
     let userBOM1 = null;
     let userBOM2 = null;
 
-    // ---- VARIABLES 3D ----
     let scene, camera, renderer, controls;
     let is3DInitialized = false;
-    let renderRequested = false; // Control de Batería
+    let renderRequested = false; 
+
+    // INICIALIZACIÓN AL ABRIR LA APP
+    window.onload = function() {
+        loadProjectsManager();
+    };
+
+    function loadProjectsManager() {
+        const savedProjects = localStorage.getItem('agroCadProjectsList');
+        
+        // MIGRACIÓN: Si el usuario tenía un proyecto guardado de la versión anterior
+        const oldLegacyData = localStorage.getItem('agroCadData');
+
+        if (savedProjects) {
+            projects = JSON.parse(savedProjects);
+        } else if (oldLegacyData) {
+            // Convertir la versión vieja al nuevo sistema de listas
+            const oldData = JSON.parse(oldLegacyData);
+            const migratedProject = {
+                id: Date.now().toString(),
+                name: oldData.projName || "Mi Primer Proyecto",
+                data: oldData
+            };
+            projects = [migratedProject];
+            saveProjectsToStorage();
+            localStorage.removeItem('agroCadData'); // Limpiar la versión vieja
+        } else {
+            projects = [];
+        }
+
+        renderDashboard();
+    }
+
+    function renderDashboard() {
+        const grid = document.getElementById('projects-grid');
+        grid.innerHTML = '';
+
+        if (projects.length === 0) {
+            grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #64748b; border: 2px dashed #cbd5e1; border-radius: 12px;">
+                <span style="font-size: 40px; display: block; margin-bottom: 10px;">🌱</span>
+                <h2>Aún no tienes proyectos</h2>
+                <p>Haz clic en "+ Crear Nuevo Proyecto" para empezar a diseñar tu primera finca.</p>
+            </div>`;
+            return;
+        }
+
+        projects.forEach(proj => {
+            const card = document.createElement('div');
+            card.className = 'project-card';
+            
+            // Si tiene datos de filtros, lo mostramos como detalle
+            const fCount = proj.data && proj.data.fCount ? proj.data.fCount : '3';
+            const fType = proj.data && proj.data.fType === 'doble' ? 'Discos' : 'Malla';
+
+            card.innerHTML = `
+                <span class="project-icon">💧</span>
+                <div class="project-name">${proj.name}</div>
+                <div class="project-details">Batería de ${fCount} Filtros de ${fType}</div>
+                <button class="btn-del-proj" onclick="deleteProject('${proj.id}', event)" title="Eliminar Proyecto">🗑️</button>
+            `;
+            
+            // Abrir proyecto al hacer clic en la tarjeta
+            card.onclick = () => openProject(proj.id);
+            grid.appendChild(card);
+        });
+    }
+
+    function createNewProject() {
+        const name = prompt('Ingresa el nombre de la Finca o Proyecto:');
+        if (!name || name.trim() === '') return;
+
+        const newProject = {
+            id: Date.now().toString(),
+            name: name,
+            data: {
+                pumpDia: '3', wellDia: '4', headerDia: '6',
+                fCount: '3', fDia: '4', fType: 'baldr',
+                bom1: getDefaultBOM1(), bom2: getDefaultBOM2()
+            }
+        };
+
+        projects.push(newProject);
+        saveProjectsToStorage();
+        openProject(newProject.id); // Lo abre directamente
+    }
+
+    function deleteProject(id, event) {
+        event.stopPropagation(); // Evita que se abra el proyecto al hacer clic en el basurero
+        if (confirm('¿Estás seguro de eliminar este proyecto por completo? Esta acción no se puede deshacer.')) {
+            projects = projects.filter(p => p.id !== id);
+            saveProjectsToStorage();
+            renderDashboard();
+        }
+    }
+
+    function saveProjectsToStorage() {
+        localStorage.setItem('agroCadProjectsList', JSON.stringify(projects));
+    }
 
     // ==========================================
-    // SISTEMA DE AUTO-GUARDADO (LOCAL STORAGE)
+    // GESTIÓN DEL ENTORNO CAD (VISTA PROYECTO)
     // ==========================================
-    function saveState() {
-        const state = {
-            projName: document.getElementById('global-project-name').value,
+
+    function openProject(id) {
+        currentProjectId = id;
+        const proj = projects.find(p => p.id === id);
+
+        // Ocultar Dashboard, Mostrar CAD
+        document.getElementById('dashboard-view').style.display = 'none';
+        document.getElementById('cad-view').style.display = 'block';
+
+        // Cargar datos en la UI
+        document.getElementById('global-project-name').value = proj.name;
+        document.getElementById('param-pump-dia').value = proj.data.pumpDia || '3';
+        document.getElementById('param-well-dia').value = proj.data.wellDia || '4';
+        document.getElementById('param-header-dia').value = proj.data.headerDia || '6';
+        document.getElementById('param-filter-count').value = proj.data.fCount || '3';
+        document.getElementById('param-filter-dia').value = proj.data.fDia || '4';
+        document.getElementById('param-filter-type').value = proj.data.fType || 'baldr';
+        
+        userBOM1 = proj.data.bom1 || getDefaultBOM1();
+        userBOM2 = proj.data.bom2 || getDefaultBOM2();
+
+        // Inicializar siempre en Plano 1
+        switchTab(1);
+    }
+
+    function goToDashboard() {
+        saveCurrentProjectData(); // Asegurar guardado antes de salir
+        document.getElementById('cad-view').style.display = 'none';
+        document.getElementById('dashboard-view').style.display = 'block';
+        currentProjectId = null;
+        renderDashboard(); // Refrescar tarjetas
+    }
+
+    function saveCurrentProjectName() {
+        if (!currentProjectId) return;
+        const newName = document.getElementById('global-project-name').value;
+        const projIndex = projects.findIndex(p => p.id === currentProjectId);
+        projects[projIndex].name = newName;
+        saveProjectsToStorage();
+    }
+
+    function saveCurrentProjectData() {
+        if (!currentProjectId) return;
+        const projIndex = projects.findIndex(p => p.id === currentProjectId);
+        
+        projects[projIndex].data = {
             pumpDia: document.getElementById('param-pump-dia').value,
             wellDia: document.getElementById('param-well-dia').value,
             headerDia: document.getElementById('param-header-dia').value,
@@ -250,31 +419,97 @@
             bom1: userBOM1,
             bom2: userBOM2
         };
-        localStorage.setItem('agroCadData', JSON.stringify(state));
+        
+        saveProjectsToStorage();
     }
 
-    function loadState() {
-        const saved = localStorage.getItem('agroCadData');
-        if (saved) {
-            const state = JSON.parse(saved);
-            document.getElementById('global-project-name').value = state.projName || 'Proyecto Agrícola';
-            document.getElementById('param-pump-dia').value = state.pumpDia || '3';
-            document.getElementById('param-well-dia').value = state.wellDia || '4';
-            document.getElementById('param-header-dia').value = state.headerDia || '6';
-            document.getElementById('param-filter-count').value = state.fCount || '3';
-            document.getElementById('param-filter-dia').value = state.fDia || '4';
-            document.getElementById('param-filter-type').value = state.fType || 'baldr';
-            userBOM1 = state.bom1 || getDefaultBOM1();
-            userBOM2 = state.bom2 || getDefaultBOM2();
+    // ==========================================
+    // LOGICA DE DIBUJO Y LISTADO
+    // ==========================================
+
+    function switchTab(tabNum) {
+        activeTab = tabNum;
+        document.getElementById('tab-btn-1').classList.toggle('active', tabNum === 1);
+        document.getElementById('tab-btn-2').classList.toggle('active', tabNum === 2);
+        document.getElementById('tab-btn-3').classList.toggle('active', tabNum === 3);
+
+        const svgViewer = document.getElementById('cad-canvas');
+        const threeViewer = document.getElementById('viewer-3d');
+        const hint3d = document.getElementById('hint-3d');
+        const bomContainer = document.getElementById('bom-container');
+
+        if (tabNum === 1 || tabNum === 2) {
+            svgViewer.style.display = 'block';
+            threeViewer.style.display = 'none';
+            hint3d.style.display = 'none';
+            bomContainer.style.display = 'block';
+            document.getElementById('lbl-top-view').textContent = (tabNum === 1) ? 'VISTA ACTIVA: PLANO 1 (BOMBEO)' : 'VISTA ACTIVA: PLANO 2 (FILTRADO)';
         } else {
-            userBOM1 = getDefaultBOM1();
-            userBOM2 = getDefaultBOM2();
+            svgViewer.style.display = 'none';
+            threeViewer.style.display = 'block';
+            hint3d.style.display = 'block';
+            bomContainer.style.display = 'none'; 
+            document.getElementById('lbl-top-view').textContent = 'VISTA ACTIVA: ENTORNO 3D (OPTIMIZADO)';
+            
+            // Si el 3D no se ha iniciado en esta sesión, lo iniciamos
+            if (!is3DInitialized) {
+                init3D();
+            } else {
+                // Truco: Forzar que el canvas se adapte al div que acaba de hacerse visible
+                camera.aspect = document.getElementById('viewer-3d').clientWidth / document.getElementById('viewer-3d').clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(document.getElementById('viewer-3d').clientWidth, document.getElementById('viewer-3d').clientHeight);
+            }
+        }
+        updateDrawing();
+    }
+
+    function updateDrawing() {
+        const filterCount = parseInt(document.getElementById('param-filter-count').value);
+        const filterType = document.getElementById('param-filter-type').value;
+        const headerDia = document.getElementById('param-header-dia').value;
+
+        if (activeTab === 1) { renderSVG_Plan1({ headerDia: headerDia + '"' }); renderBOMTable(userBOM1); }
+        else if (activeTab === 2) { renderSVG_Plan2({ filterCount, filterType, headerDia: headerDia + '"', filterDia: '4"' }); renderBOMTable(userBOM2); }
+        else if (activeTab === 3) { build3DModel(filterCount, filterType); }
+        
+        saveCurrentProjectData(); // Auto-guardar cada vez que tocas algo
+    }
+
+    // Funciones BOM (Las mismas que ya funcionaban perfecto)
+    function resetCurrentBOM() {
+        if (confirm('¿Restaurar lista de este plano a sus valores por defecto?')) {
+            if (activeTab === 1) { userBOM1 = getDefaultBOM1(); renderBOMTable(userBOM1); }
+            else { userBOM2 = getDefaultBOM2(); renderBOMTable(userBOM2); }
+            saveCurrentProjectData();
         }
     }
+    function addBomRow() {
+        const arr = activeTab === 1 ? userBOM1 : userBOM2;
+        arr.push({ id: String(arr.length+1), desc: 'Nuevo Ítem', qty: '1 unidad', spec: '' });
+        renderBOMTable(arr); saveCurrentProjectData();
+    }
+    function deleteBomRow(i) {
+        if (confirm('¿Eliminar ítem?')) {
+            const arr = activeTab === 1 ? userBOM1 : userBOM2;
+            arr.splice(i, 1); renderBOMTable(arr); saveCurrentProjectData();
+        }
+    }
+    function updateBomItem(i, f, v) {
+        (activeTab === 1 ? userBOM1 : userBOM2)[i][f] = v; saveCurrentProjectData();
+    }
+    function renderBOMTable(arr) {
+        document.getElementById('bom-tbody').innerHTML = arr.map((r, i) => `
+            <tr>
+                <td><input class="editable-textarea item-num" value="${r.id}" onchange="updateBomItem(${i}, 'id', this.value)"></td>
+                <td><textarea class="editable-textarea" rows="2" style="font-weight:600;" onchange="updateBomItem(${i}, 'desc', this.value)">${r.desc}</textarea></td>
+                <td><textarea class="editable-textarea" rows="2" style="font-weight:700; color:#15803d; background:#dcfce7;" onchange="updateBomItem(${i}, 'qty', this.value)">${r.qty}</textarea></td>
+                <td><textarea class="editable-textarea" rows="2" onchange="updateBomItem(${i}, 'spec', this.value)">${r.spec}</textarea></td>
+                <td style="text-align:center;" class="no-print"><button class="btn-del" onclick="deleteBomRow(${i})">❌</button></td>
+            </tr>
+        `).join('');
+    }
 
-    // ==========================================
-    // COMPARTIR POR WHATSAPP / CSV
-    // ==========================================
     function shareBOM() {
         const arr = activeTab === 1 ? userBOM1 : userBOM2;
         const projName = document.getElementById('global-project-name').value;
@@ -302,127 +537,8 @@
         }
     }
 
-    function getDefaultBOM1() {
-        return [
-            { id: '1', desc: 'Válvula Check de Pie 4"', qty: '1 unidad', spec: 'Cuerpo plástico PVC-U resistente.' },
-            { id: '2', desc: 'Tubería PVC Schedule 40 de Succión — 4"', qty: '40 ft', spec: 'Aspiración interior pozo.' },
-            { id: '3', desc: 'Codo 90° PVC Sch 40 — 4"', qty: '1 unidad', spec: 'Cambio de dirección entrada bomba.' },
-            { id: '4', desc: 'Brida (Flange) PVC Sch 40 — 4"', qty: '1 unidad', spec: 'Acople a la bomba.' },
-            { id: '5', desc: 'Junta de Neopreno (Gasket) — 4"', qty: '2 unidades', spec: 'Juntas de sellado bridadas.' },
-            { id: '6', desc: 'Tornillos / Pernos para Flange — 5/8"', qty: '16 unidades', spec: 'Acero inoxidable.' },
-            { id: '7', desc: 'Válvula Check In-Line — 3"', qty: '2 unidades', spec: 'Antirretorno descarga de bombas.' },
-            { id: '8', desc: 'Tee Reducida PVC Sch 40 — 6" × 3"', qty: '1 unidad', spec: 'Derivación impulsión Bomba 2.' },
-            { id: '9', desc: 'Codo 90° PVC Sch 40 — 6"', qty: '1 unidad', spec: 'Conexión Bomba 1 al cabezal.' },
-            { id: '10', desc: 'Reducción Bushing PVC Sch 40 — 6" × 3"', qty: '1 unidad', spec: 'Inserto en codo de Bomba 1.' }
-        ];
-    }
-
-    function getDefaultBOM2() {
-        const filterCount = parseInt(document.getElementById('param-filter-count').value) || 3;
-        const filterDia = document.getElementById('param-filter-dia').value + '"';
-        const headerDia = document.getElementById('param-header-dia').value + '"';
-        const filterType = document.getElementById('param-filter-type').value;
-        const numFlanges = filterCount * 2;
-        const numBolts = numFlanges * 8;
-        const numTees = (filterCount - 1) * 2;
-
-        let filterName = `BALDR 4" H-Style Screen Filter — 120 Mesh`;
-        if (filterType === 'doble') filterName = `Filtro Doble Anillas/Discos ${filterDia} (120 Mesh)`;
-
-        return [
-            { id: '1', desc: filterName, qty: `${filterCount} unidades`, spec: 'Conexión roscada macho MNPT, 145 PSI.' },
-            { id: '2', desc: `Brida Van Stone PVC Sch 40 ${filterDia}`, qty: `${numFlanges} unidades`, spec: 'Anillo giratorio Sch 40 y rosca hembra NPT.' },
-            { id: '3', desc: `Juntas EPDM ${filterDia} + Pernos Inox 304`, qty: `${numFlanges} juntas + ${numBolts} tornillos`, spec: `Suministrar exacto: 8 agujeros por brida.` },
-            { id: '4', desc: `Válvula de Mariposa — 4"`, qty: `${numFlanges} unidades`, spec: 'Cuerpo 100% Plástico PVC. Aislamiento filtro.' },
-            { id: '5', desc: `Tubería PVC Sch 40 — 6"`, qty: '24.0 ft', spec: 'Tubería principal para cabezales.' },
-            { id: '6', desc: `Tubería PVC Sch 40 — 4"`, qty: '20.0 ft', spec: `Para cortar niples de bajada en los filtros.` },
-            { id: '7', desc: `Codo 90° Sch 40 PVC + Reducción Bushing — ${headerDia} × ${filterDia}`, qty: '2 juegos', spec: 'Cierra extremos de colectores.' },
-            { id: '8', desc: `Codo 90° PVC Sch 40 — 6"`, qty: '2 unidades', spec: 'Codos para bajada a la red de riego.' },
-            { id: '9', desc: `Tee Reducida Sch 40 para Derivación — ${headerDia} × ${filterDia}`, qty: `${numTees} unidades`, spec: 'Derivaciones a filtros intermedios.' },
-            { id: '10', desc: `Collarín de Derivación (*Saddle Clamp*) — ${headerDia} × 1"`, qty: '1 unidad', spec: 'Instalada en colector superior para ventosa.' },
-            { id: '11', desc: 'Niples Roscados PVC 1" MNPT (Longitud 2")', qty: '2 unidades', spec: 'Para conectar Collarín ↔ Válvula ↔ Ventosa.' },
-            { id: '12', desc: 'Válvula de Bola PVC 1" FNPT', qty: '1 unidad', spec: 'Aislamiento de Ventosa de aire.' },
-            { id: '13', desc: 'Ventosa Alivio de Aire Cinética / Trifuncional — 1"', qty: '1 unidad', spec: 'Expulsa vacíos en el cabezal.' },
-            { id: '14', desc: '4" Sch. 80 Van Stone Flange (Socket)', qty: `${numFlanges} unidades`, spec: 'Brida 4" ANSI 150.' },
-            { id: '15', desc: 'Adaptadores PVC Rosca a Flange 4"', qty: `${numFlanges} unidades`, spec: 'Para conectar el cuerpo del filtro a la brida.'}
-        ];
-    }
-
-    function switchTab(tabNum) {
-        activeTab = tabNum;
-        document.getElementById('tab-btn-1').classList.toggle('active', tabNum === 1);
-        document.getElementById('tab-btn-2').classList.toggle('active', tabNum === 2);
-        document.getElementById('tab-btn-3').classList.toggle('active', tabNum === 3);
-
-        const svgViewer = document.getElementById('cad-canvas');
-        const threeViewer = document.getElementById('viewer-3d');
-        const hint3d = document.getElementById('hint-3d');
-        const bomContainer = document.getElementById('bom-container');
-
-        if (tabNum === 1 || tabNum === 2) {
-            svgViewer.style.display = 'block';
-            threeViewer.style.display = 'none';
-            hint3d.style.display = 'none';
-            bomContainer.style.display = 'block';
-            document.getElementById('lbl-top-view').textContent = (tabNum === 1) ? 'VISTA ACTIVA: PLANO 1 (BOMBEO)' : 'VISTA ACTIVA: PLANO 2 (FILTRADO)';
-        } else {
-            svgViewer.style.display = 'none';
-            threeViewer.style.display = 'block';
-            hint3d.style.display = 'block';
-            bomContainer.style.display = 'none'; 
-            document.getElementById('lbl-top-view').textContent = 'VISTA ACTIVA: ENTORNO 3D (OPTIMIZADO)';
-            if (!is3DInitialized) init3D();
-        }
-        updateDrawing();
-    }
-
-    function updateDrawing() {
-        const filterCount = parseInt(document.getElementById('param-filter-count').value);
-        const filterType = document.getElementById('param-filter-type').value;
-        const headerDia = document.getElementById('param-header-dia').value;
-
-        if (activeTab === 1) { renderSVG_Plan1({ headerDia: headerDia + '"' }); renderBOMTable(userBOM1); }
-        else if (activeTab === 2) { renderSVG_Plan2({ filterCount, filterType, headerDia: headerDia + '"', filterDia: '4"' }); renderBOMTable(userBOM2); }
-        else if (activeTab === 3) { build3DModel(filterCount, filterType); }
-        
-        saveState();
-    }
-
-    function resetCurrentBOM() {
-        if (confirm('¿Restaurar lista por defecto?')) {
-            if (activeTab === 1) { userBOM1 = getDefaultBOM1(); renderBOMTable(userBOM1); }
-            else { userBOM2 = getDefaultBOM2(); renderBOMTable(userBOM2); }
-            saveState();
-        }
-    }
-    function addBomRow() {
-        const arr = activeTab === 1 ? userBOM1 : userBOM2;
-        arr.push({ id: String(arr.length+1), desc: 'Nuevo Ítem', qty: '1 unidad', spec: '' });
-        renderBOMTable(arr); saveState();
-    }
-    function deleteBomRow(i) {
-        if (confirm('¿Eliminar ítem?')) {
-            const arr = activeTab === 1 ? userBOM1 : userBOM2;
-            arr.splice(i, 1); renderBOMTable(arr); saveState();
-        }
-    }
-    function updateBomItem(i, f, v) {
-        (activeTab === 1 ? userBOM1 : userBOM2)[i][f] = v; saveState();
-    }
-    function renderBOMTable(arr) {
-        document.getElementById('bom-tbody').innerHTML = arr.map((r, i) => `
-            <tr>
-                <td><input class="editable-textarea item-num" value="${r.id}" onchange="updateBomItem(${i}, 'id', this.value)"></td>
-                <td><textarea class="editable-textarea" rows="2" style="font-weight:600;" onchange="updateBomItem(${i}, 'desc', this.value)">${r.desc}</textarea></td>
-                <td><textarea class="editable-textarea" rows="2" style="font-weight:700; color:#15803d; background:#dcfce7;" onchange="updateBomItem(${i}, 'qty', this.value)">${r.qty}</textarea></td>
-                <td><textarea class="editable-textarea" rows="2" onchange="updateBomItem(${i}, 'spec', this.value)">${r.spec}</textarea></td>
-                <td style="text-align:center;" class="no-print"><button class="btn-del" onclick="deleteBomRow(${i})">❌</button></td>
-            </tr>
-        `).join('');
-    }
-
     // ==============================================================================================
-    // RENDER SVG 2D: PLANO 1
+    // RENDER SVG 2D: PLANOS (Exactamente iguales)
     // ==============================================================================================
     function renderSVG_Plan1(params) {
         const svg = document.getElementById('cad-canvas');
@@ -492,9 +608,6 @@
         `;
     }
 
-    // ==============================================================================================
-    // RENDER SVG 2D: PLANO 2 (CABEZAL EXTERIOR CON COTAS)
-    // ==============================================================================================
     function renderSVG_Plan2(params) {
         const svg = document.getElementById('cad-canvas');
         const topY = 200, bottomY = 500, underY = 670, groundY = 580, headerY = 630; 
@@ -633,7 +746,7 @@
     }
 
     // ==============================================================================================
-    // MOTOR 3D PROCEDURAL EXACTO 
+    // MOTOR 3D
     // ==============================================================================================
     function init3D() {
         const container = document.getElementById('viewer-3d');
@@ -649,7 +762,6 @@
         controls = new THREE.OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true; controls.dampingFactor = 0.05;
 
-        // Iluminación
         scene.add(new THREE.AmbientLight(0xffffff, 0.5));
         const spotLight = new THREE.SpotLight(0xffffff, 0.7);
         spotLight.position.set(20, 60, 40); spotLight.castShadow = true;
@@ -657,13 +769,10 @@
         const fillLight = new THREE.DirectionalLight(0xaaccff, 0.4);
         fillLight.position.set(-30, 20, -30); scene.add(fillLight);
 
-        // Suelo
         const grid = new THREE.GridHelper(120, 120, 0x888888, 0xcccccc);
         grid.position.y = -2; scene.add(grid);
 
         is3DInitialized = true;
-
-        // SISTEMA DE AHORRO DE BATERÍA (Solo renderiza al mover la cámara)
         controls.addEventListener('change', requestRenderIfNotRequested);
         window.addEventListener('resize', requestRenderIfNotRequested);
     }
@@ -680,7 +789,6 @@
         }
     }
 
-    // --- CONSTRUCTORES DE GEOMETRÍAS ---
     function createFlange(matBase, matBolt) {
         const group = new THREE.Group();
         const base = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.3, 32), matBase);
@@ -710,7 +818,6 @@
     function build3DModel(filterCount, filterType) {
         if (!is3DInitialized) return;
 
-        // BARRIDO LIMPIO DE MEMORIA 3D
         for (let i = scene.children.length - 1; i >= 0; i--) {
             const obj = scene.children[i];
             if (obj.isMesh || obj.type === "Group") {
@@ -729,7 +836,6 @@
         const spacing = 8; 
         const lastFilterX = (filterCount - 1) * spacing;
         
-        // 1. ZONA BOMBEO A LA IZQUIERDA
         const pumpStartX = -30; 
         const pumpSpacing = 8;
         
@@ -737,12 +843,10 @@
             const px = pumpStartX + (p * pumpSpacing);
             
             const motor = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.4, 3, 32), mGrey);
-            motor.rotation.x = Math.PI/2; 
-            motor.position.set(px, 0.5, -2.5); scene.add(motor);
+            motor.rotation.x = Math.PI/2; motor.position.set(px, 0.5, -2.5); scene.add(motor);
             
             const volute = new THREE.Mesh(new THREE.SphereGeometry(1.8, 32, 32), mBlue);
-            volute.scale.set(1, 1, 0.6); 
-            volute.position.set(px, 0.5, 0); scene.add(volute);
+            volute.scale.set(1, 1, 0.6); volute.position.set(px, 0.5, 0); scene.add(volute);
 
             const suction = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 2.5, 32), mGrey);
             suction.position.set(px, -0.75, 0); scene.add(suction);
@@ -753,20 +857,17 @@
             const checkBody = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 1.8, 32), mGrey);
             checkBody.position.set(px, 4, 0); scene.add(checkBody);
             const checkCap = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.0, 16), mGrey);
-            checkCap.rotation.z = Math.PI/2;
-            checkCap.position.set(px + 0.8, 4, 0); scene.add(checkCap);
+            checkCap.rotation.z = Math.PI/2; checkCap.position.set(px + 0.8, 4, 0); scene.add(checkCap);
             
             const unionTop = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mBlue);
             unionTop.position.set(px, 8, 0); scene.add(unionTop);
         }
 
-        // --- CABEZAL AÉREO DE BOMBAS (AZUL) QUE LUEGO SE ENTIERRA ---
         const dropX = -12; 
 
         const headAereoLen = dropX - pumpStartX;
         const headAereo = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, headAereoLen, 32), mBlue);
-        headAereo.rotation.z = Math.PI/2; 
-        headAereo.position.set(pumpStartX + headAereoLen/2, 8, 0); scene.add(headAereo);
+        headAereo.rotation.z = Math.PI/2; headAereo.position.set(pumpStartX + headAereoLen/2, 8, 0); scene.add(headAereo);
 
         const codoDropAereo = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mBlue);
         codoDropAereo.position.set(dropX, 8, 0); scene.add(codoDropAereo);
@@ -777,7 +878,6 @@
         const codoDropEnterrado = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mBlue);
         codoDropEnterrado.position.set(dropX, -2, 0); scene.add(codoDropEnterrado);
 
-        // 2. COLECTOR INFERIOR ENTERRADO (Azul) - Termina exacto en el último filtro
         const blueLen = lastFilterX - dropX;
         const hInf = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, blueLen, 32), mBlue);
         hInf.rotation.z = Math.PI/2; hInf.position.set(dropX + blueLen/2, -2, 0); scene.add(hInf);
@@ -785,7 +885,6 @@
         const codoAzulFin = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mBlue);
         codoAzulFin.position.set(lastFilterX, -2, 0); scene.add(codoAzulFin);
 
-        // 3. COLECTOR SUPERIOR (Verde/Teal) - Empieza en el primer filtro hacia la derecha
         const greenEnd = lastFilterX + 10;
         const greenLen = greenEnd - 0; 
         const hSup = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, greenLen, 32), mTeal);
@@ -794,7 +893,6 @@
         const codoVerdeInicio = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mTeal);
         codoVerdeInicio.position.set(0, 10, 0); scene.add(codoVerdeInicio);
 
-        // 4. BATERÍA DE FILTROS 
         for (let i = 0; i < filterCount; i++) {
             const posX = i * spacing;
 
@@ -808,8 +906,7 @@
 
             if (filterType === 'baldr') {
                 const fBody = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 6, 32), mBlack);
-                fBody.rotation.x = Math.PI/2; 
-                fBody.position.set(posX, 5.0, 0); scene.add(fBody);
+                fBody.rotation.x = Math.PI/2; fBody.position.set(posX, 5.0, 0); scene.add(fBody);
                 const capF = new THREE.Mesh(new THREE.SphereGeometry(1.6, 32, 32), mBlack);
                 capF.position.set(posX, 5.0, 3); scene.add(capF);
                 const capB = new THREE.Mesh(new THREE.SphereGeometry(1.6, 32, 32), mBlack);
@@ -830,7 +927,6 @@
             riserTop.position.set(posX, 9, 0); scene.add(riserTop);
         }
 
-        // 5. VENTOSA
         const ventPosX = lastFilterX + 5;
         const niple1 = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.8, 16), mGrey);
         niple1.position.set(ventPosX, 10.4, 0); scene.add(niple1);
@@ -841,7 +937,6 @@
         const ventosa = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 1.2, 32), mYellow);
         ventosa.position.set(ventPosX, 12.4, 0); scene.add(ventosa);
 
-        // 6. BAJADA CON VÁLVULA GENERAL Y CODOS
         const elbowTop = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mTeal);
         elbowTop.position.set(greenEnd, 10, 0); scene.add(elbowTop);
         
@@ -861,18 +956,23 @@
         const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 4, 32), mTeal);
         tail.rotation.z = Math.PI/2; tail.position.set(greenEnd + 2, -1, 0); scene.add(tail);
 
-        // Ajuste inicial de la cámara y Forzar Render
         controls.target.set( (lastFilterX + dropX) / 2 , 4, 0);
         camera.position.set( (lastFilterX + dropX) / 2 , 20, 50);
         
         requestRenderIfNotRequested();
     }
-
-    // Inicializar Cargando Estado Guardado
-    window.onload = function() {
-        loadState();
-        switchTab(1); 
-    };
 </script>
+
+<!-- SERVICE WORKER SCRIPT INJECTION (PARA LA PWA / MODO OFFLINE) -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker Registrado'))
+        .catch(err => console.log('SW Error:', err));
+    });
+  }
+</script>
+
 </body>
 </html>
