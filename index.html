@@ -250,7 +250,7 @@
 
         <!-- VISOR -->
         <div class="viewer-card">
-            <!-- AQUÍ ESTABA EL BUG: Esta etiqueta desapareció y rompía la creación de proyectos -->
+            <!-- Título PDF -->
             <h2 id="print-title" class="print-only">Proyecto</h2>
             
             <svg id="cad-canvas" class="svg-wrapper" viewBox="0 0 1440 760" xmlns="http://www.w3.org/2000/svg"></svg>
@@ -345,6 +345,61 @@
         });
     }
 
+    // =======================================================
+    // FUNCIONES RESTAURADAS PARA CREAR LOS LISTADOS POR DEFECTO
+    // =======================================================
+    function getDefaultBOM1() {
+        return [
+            { id: '1', desc: 'Válvula Check de Pie 4"', qty: '1 unidad', spec: 'Cuerpo plástico PVC-U resistente.' },
+            { id: '2', desc: 'Tubería PVC Schedule 40 de Succión — 4"', qty: '40 ft', spec: 'Aspiración interior pozo.' },
+            { id: '3', desc: 'Codo 90° PVC Sch 40 — 4"', qty: '1 unidad', spec: 'Cambio de dirección entrada bomba.' },
+            { id: '4', desc: 'Brida (Flange) PVC Sch 40 — 4"', qty: '1 unidad', spec: 'Acople a la bomba.' },
+            { id: '5', desc: 'Junta de Neopreno (Gasket) — 4"', qty: '2 unidades', spec: 'Juntas de sellado bridadas.' },
+            { id: '6', desc: 'Tornillos / Pernos para Flange — 5/8"', qty: '16 unidades', spec: 'Acero inoxidable.' },
+            { id: '7', desc: 'Válvula Check In-Line — 3"', qty: '2 unidades', spec: 'Antirretorno descarga de bombas.' },
+            { id: '8', desc: 'Tee Reducida PVC Sch 40 — 6" × 3"', qty: '1 unidad', spec: 'Derivación impulsión Bomba 2.' },
+            { id: '9', desc: 'Codo 90° PVC Sch 40 — 6"', qty: '1 unidad', spec: 'Conexión Bomba 1 al cabezal.' },
+            { id: '10', desc: 'Reducción Bushing PVC Sch 40 — 6" × 3"', qty: '1 unidad', spec: 'Inserto en codo de Bomba 1.' }
+        ];
+    }
+
+    function getDefaultBOM2() {
+        const filterCountElem = document.getElementById('param-filter-count');
+        const filterDiaElem = document.getElementById('param-filter-dia');
+        const headerDiaElem = document.getElementById('param-header-dia');
+        const filterTypeElem = document.getElementById('param-filter-type');
+
+        const filterCount = filterCountElem ? parseInt(filterCountElem.value) : 3;
+        const filterDia = filterDiaElem ? filterDiaElem.value : '4';
+        const headerDia = headerDiaElem ? headerDiaElem.value : '6';
+        const filterType = filterTypeElem ? filterTypeElem.value : 'baldr';
+
+        const numFlanges = filterCount * 2;
+        const numBolts = numFlanges * 8;
+        const numTees = (filterCount > 1) ? (filterCount - 1) * 2 : 0;
+
+        let filterName = `BALDR 4" H-Style Screen Filter — 120 Mesh`;
+        if (filterType === 'doble') filterName = `Filtro Doble Anillas/Discos ${filterDia}" (120 Mesh)`;
+
+        return [
+            { id: '1', desc: filterName, qty: `${filterCount} unidades`, spec: 'Conexión roscada macho MNPT, 145 PSI.' },
+            { id: '2', desc: `Brida Van Stone PVC Sch 40 ${filterDia}"`, qty: `${numFlanges} unidades`, spec: 'Anillo giratorio Sch 40 y rosca hembra NPT.' },
+            { id: '3', desc: `Juntas EPDM ${filterDia}" + Pernos Inox 304`, qty: `${numFlanges} juntas + ${numBolts} tornillos`, spec: `Suministrar exacto: 8 agujeros por brida.` },
+            { id: '4', desc: `Válvula de Mariposa — 4"`, qty: `${numFlanges} unidades`, spec: 'Cuerpo 100% Plástico PVC. Aislamiento filtro.' },
+            { id: '5', desc: `Tubería PVC Sch 40 — 6"`, qty: '24.0 ft', spec: 'Tubería principal para cabezales.' },
+            { id: '6', desc: `Tubería PVC Sch 40 — 4"`, qty: '20.0 ft', spec: `Para cortar niples de bajada en los filtros.` },
+            { id: '7', desc: `Codo 90° Sch 40 PVC + Reducción Bushing — ${headerDia}" × ${filterDia}"`, qty: '2 juegos', spec: 'Cierra extremos de colectores.' },
+            { id: '8', desc: `Codo 90° PVC Sch 40 — 6"`, qty: '2 unidades', spec: 'Codos para bajada a la red de riego.' },
+            { id: '9', desc: `Tee Reducida Sch 40 para Derivación — ${headerDia}" × ${filterDia}"`, qty: `${numTees} unidades`, spec: 'Derivaciones a filtros intermedios.' },
+            { id: '10', desc: `Collarín de Derivación (*Saddle Clamp*) — ${headerDia}" × 1"`, qty: '1 unidad', spec: 'Instalada en colector superior para ventosa.' },
+            { id: '11', desc: 'Niples Roscados PVC 1" MNPT (Longitud 2")', qty: '2 unidades', spec: 'Para conectar Collarín ↔ Válvula ↔ Ventosa.' },
+            { id: '12', desc: 'Válvula de Bola PVC 1" FNPT', qty: '1 unidad', spec: 'Aislamiento de Ventosa de aire.' },
+            { id: '13', desc: 'Ventosa Alivio de Aire Cinética / Trifuncional — 1"', qty: '1 unidad', spec: 'Expulsa vacíos en el cabezal.' },
+            { id: '14', desc: '4" Sch. 80 Van Stone Flange (Socket)', qty: `${numFlanges} unidades`, spec: 'Brida 4" ANSI 150.' },
+            { id: '15', desc: 'Adaptadores PVC Rosca a Flange 4"', qty: `${numFlanges} unidades`, spec: 'Para conectar el cuerpo del filtro a la brida.'}
+        ];
+    }
+
     function createNewProject() {
         const name = prompt('Ingresa el nombre de la Finca o Proyecto:');
         if (!name || name.trim() === '') return;
@@ -355,7 +410,8 @@
             data: {
                 pumpDia: '3', wellDia: '4', headerDia: '6',
                 fCount: '3', fDia: '4', fType: 'baldr',
-                bom1: getDefaultBOM1(), bom2: getDefaultBOM2()
+                bom1: getDefaultBOM1(), 
+                bom2: getDefaultBOM2()
             }
         };
 
@@ -389,7 +445,6 @@
 
         document.getElementById('global-project-name').value = proj.name;
         
-        // Seguro Anti-Crash para el título de impresión
         const titleEl = document.getElementById('print-title');
         if (titleEl) titleEl.textContent = proj.name;
 
@@ -517,7 +572,6 @@
         (activeTab === 1 ? userBOM1 : userBOM2)[i][f] = v; saveCurrentProjectData();
     }
     function renderBOMTable(arr) {
-        // CORREGIDO: Botón rojo con aspa (x) clara.
         document.getElementById('bom-tbody').innerHTML = arr.map((r, i) => `
             <tr>
                 <td><input class="editable-textarea item-num" value="${r.id}" onchange="updateBomItem(${i}, 'id', this.value)"></td>
@@ -763,7 +817,7 @@
     }
 
     // ==============================================================================================
-    // MOTOR 3D
+    // MOTOR 3D PROCEDURAL EXACTO
     // ==============================================================================================
     function init3D() {
         const container = document.getElementById('viewer-3d');
