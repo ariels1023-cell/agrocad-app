@@ -43,9 +43,11 @@
         .btn-del-proj { position: absolute; top: 15px; right: 15px; background: #fee2e2; color: #ef4444; border: none; width: 32px; height: 32px; border-radius: 6px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-del-proj:hover { background: #ef4444; color: white; }
 
-        /* TABS */
+        /* ========================================= */
+        /* TABS (CORREGIDO EL BUG VISUAL)            */
+        /* ========================================= */
         .tab-bar { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-        .tab-btn { flex: 1; padding: 12px 20px; background: #e2e8f0; border: 2px solid var(--border); border-radius: 8px; font-size: 14.5px; font-weight: 800; cursor: pointer; text-align: center; }
+        .tab-btn { flex: 1; padding: 12px 20px; background: #e2e8f0; color: var(--text-main); border: 2px solid var(--border); border-radius: 8px; font-size: 14.5px; font-weight: 800; cursor: pointer; text-align: center; transition: 0.2s; }
         .tab-btn.active { background: var(--primary); color: #ffffff; border-color: var(--primary); }
 
         /* PROYECTO & TITLE */
@@ -82,7 +84,10 @@
         .btn-action { background: #0d9488; }
         .btn-reset { background: #64748b; }
         .btn-share { background: #2563eb; }
-        .btn-del { background: #ef4444; color: white; border: none; padding: 5px 8px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        
+        /* BOTÓN BORRAR (CORREGIDO PARA MAYOR CLARIDAD) */
+        .btn-del { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-weight: 900; font-size: 14px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+        .btn-del:hover { background: #dc2626; }
         
         table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 8px; min-width: 600px; }
         th { background: var(--table-header); color: #ffffff; text-align: left; padding: 10px 12px; font-size: 11.5px; }
@@ -105,16 +110,52 @@
             .tab-btn { padding: 10px; font-size: 12px; }
         }
 
-        /* IMPRESIÓN */
+        /* ========================================= */
+        /* REGLAS ESTRICTAS DE IMPRESIÓN PDF         */
+        /* ========================================= */
+        .print-only { display: none; }
+
         @media print {
             body { background-color: #ffffff !important; padding: 0 !important; }
             .no-print { display: none !important; }
             .main-grid { display: block !important; }
-            .project-header-bar { border: 2px solid #000 !important; padding: 10px !important; margin-bottom: 10px !important; }
-            .global-proj-input { font-size: 24pt !important; color: #000 !important; border: none !important; }
-            .viewer-card { border: 2px solid #000 !important; padding: 4px !important; margin-bottom: 0 !important; page-break-inside: avoid; }
-            .svg-wrapper { max-height: 80vh !important; height: 80vh !important; width: 100% !important; border: none !important; }
-            .bom-card { page-break-before: always !important; border: 1px solid #000 !important; padding: 8px !important; margin-top: 0 !important; }
+            
+            /* Título Automático para el Plano PDF */
+            .print-only { display: block; font-size: 24pt; font-weight: 900; color: #000; text-transform: uppercase; text-align: center; margin-bottom: 10px; }
+
+            /* FORZAR PÁGINA 1 HORIZONTAL (PLANO) Y PÁGINA 2 VERTICAL (LISTA) */
+            @page { margin: 10mm; }
+            @page plano-page { size: A4 landscape; }
+            @page lista-page { size: A4 portrait; }
+
+            .viewer-card { 
+                page: plano-page; /* Asignar a página horizontal */
+                page-break-after: always !important; 
+                break-after: page !important;
+                border: 2px solid #000 !important; 
+                padding: 10px !important; 
+                box-shadow: none !important;
+                margin: 0 !important;
+            }
+
+            .svg-wrapper { 
+                width: 100% !important; 
+                height: auto !important; 
+            }
+
+            .bom-card { 
+                page: lista-page; /* Asignar a página vertical */
+                page-break-before: always !important; 
+                break-before: page !important;
+                border: 1px solid #000 !important; 
+                padding: 10px !important; 
+                margin: 0 !important;
+                box-shadow: none !important;
+            }
+
+            .editable-textarea { border: none !important; background: transparent !important; padding: 2px 0 !important; }
+            table th { background: #0f172a !important; color: #ffffff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            tr:nth-child(even) td { background: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         }
     </style>
 </head>
@@ -128,11 +169,11 @@
     </div>
     
     <div id="projects-grid" class="projects-grid">
-        <!-- Los proyectos se cargarán aquí desde JavaScript -->
+        <!-- Los proyectos se cargarán aquí -->
     </div>
 </div>
 
-<!-- PANTALLA 2: ENTORNO CAD (Oculto por defecto) -->
+<!-- PANTALLA 2: ENTORNO CAD -->
 <div id="cad-view" class="app-container" style="display: none;">
 
     <div class="project-header-bar no-print">
@@ -141,16 +182,17 @@
         <input type="text" id="global-project-name" class="global-proj-input" oninput="saveCurrentProjectName()">
     </div>
 
-    <!-- TABS -->
+    <!-- TABS (Botones Corregidos) -->
     <div class="tab-bar no-print">
         <button id="tab-btn-1" class="tab-btn active" onclick="switchTab(1)">🏛️ PLANO 1: BOMBEO</button>
         <button id="tab-btn-2" class="tab-btn" onclick="switchTab(2)">🌊 PLANO 2: FILTRADO</button>
-        <button id="tab-btn-3" class="tab-btn" onclick="switchTab(3)" style="background:#0f172a; color:#fff;">🌐 VISTA 3D REALISTA</button>
+        <!-- ¡ELIMINADO EL STYLE INLINE OSCURO PARA EVITAR CONFUSIÓN! -->
+        <button id="tab-btn-3" class="tab-btn" onclick="switchTab(3)">🌐 VISTA 3D REALISTA</button>
     </div>
 
     <div class="top-action-bar no-print">
         <div><strong id="lbl-top-view">VISTA ACTIVA: PLANO 1</strong> • Auto-guardado Activado 💾</div>
-        <button class="print-btn" onclick="window.print()">🖨️ IMPRIMIR PLANO Y BOM</button>
+        <button class="print-btn" onclick="window.print()">🖨️ IMPRIMIR PDF / PLANO</button>
     </div>
 
     <div class="main-grid">
@@ -216,6 +258,9 @@
 
         <!-- VISOR -->
         <div class="viewer-card">
+            <!-- Título que solo aparecerá en el PDF Impreso -->
+            <h2 id="print-title" class="print-only">Proyecto</h2>
+            
             <svg id="cad-canvas" class="svg-wrapper" viewBox="0 0 1440 760" xmlns="http://www.w3.org/2000/svg"></svg>
             <div id="viewer-3d"></div>
             <div id="hint-3d" style="display:none; position:absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,0.85); color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; pointer-events: none;">
@@ -230,7 +275,7 @@
             <span id="lbl-bom-title">📋 LISTADO DE COMPRA Y MATERIALES</span>
             <div class="bom-header-actions no-print">
                 <button class="btn-action" onclick="addBomRow()">➕ Agregar Ítem</button>
-                <button class="btn-reset" onclick="resetCurrentBOM()">🔄 Restaurar Lista Original</button>
+                <button class="btn-reset" onclick="resetCurrentBOM()">🔄 Restaurar Lista</button>
                 <button class="btn-share" onclick="shareBOM()">📤 Compartir / CSV</button>
             </div>
         </div>
@@ -264,21 +309,18 @@
     let is3DInitialized = false;
     let renderRequested = false; 
 
-    // INICIALIZACIÓN AL ABRIR LA APP
+    // INICIALIZACIÓN
     window.onload = function() {
         loadProjectsManager();
     };
 
     function loadProjectsManager() {
         const savedProjects = localStorage.getItem('agroCadProjectsList');
-        
-        // MIGRACIÓN: Si el usuario tenía un proyecto guardado de la versión anterior
         const oldLegacyData = localStorage.getItem('agroCadData');
 
         if (savedProjects) {
             projects = JSON.parse(savedProjects);
         } else if (oldLegacyData) {
-            // Convertir la versión vieja al nuevo sistema de listas
             const oldData = JSON.parse(oldLegacyData);
             const migratedProject = {
                 id: Date.now().toString(),
@@ -287,11 +329,10 @@
             };
             projects = [migratedProject];
             saveProjectsToStorage();
-            localStorage.removeItem('agroCadData'); // Limpiar la versión vieja
+            localStorage.removeItem('agroCadData');
         } else {
             projects = [];
         }
-
         renderDashboard();
     }
 
@@ -311,8 +352,6 @@
         projects.forEach(proj => {
             const card = document.createElement('div');
             card.className = 'project-card';
-            
-            // Si tiene datos de filtros, lo mostramos como detalle
             const fCount = proj.data && proj.data.fCount ? proj.data.fCount : '3';
             const fType = proj.data && proj.data.fType === 'doble' ? 'Discos' : 'Malla';
 
@@ -320,10 +359,8 @@
                 <span class="project-icon">💧</span>
                 <div class="project-name">${proj.name}</div>
                 <div class="project-details">Batería de ${fCount} Filtros de ${fType}</div>
-                <button class="btn-del-proj" onclick="deleteProject('${proj.id}', event)" title="Eliminar Proyecto">🗑️</button>
+                <button class="btn-del-proj" onclick="deleteProject('${proj.id}', event)" title="Eliminar Proyecto">&#10006;</button>
             `;
-            
-            // Abrir proyecto al hacer clic en la tarjeta
             card.onclick = () => openProject(proj.id);
             grid.appendChild(card);
         });
@@ -345,11 +382,11 @@
 
         projects.push(newProject);
         saveProjectsToStorage();
-        openProject(newProject.id); // Lo abre directamente
+        openProject(newProject.id); 
     }
 
     function deleteProject(id, event) {
-        event.stopPropagation(); // Evita que se abra el proyecto al hacer clic en el basurero
+        event.stopPropagation(); 
         if (confirm('¿Estás seguro de eliminar este proyecto por completo? Esta acción no se puede deshacer.')) {
             projects = projects.filter(p => p.id !== id);
             saveProjectsToStorage();
@@ -362,19 +399,20 @@
     }
 
     // ==========================================
-    // GESTIÓN DEL ENTORNO CAD (VISTA PROYECTO)
+    // GESTIÓN DEL ENTORNO CAD
     // ==========================================
 
     function openProject(id) {
         currentProjectId = id;
         const proj = projects.find(p => p.id === id);
 
-        // Ocultar Dashboard, Mostrar CAD
         document.getElementById('dashboard-view').style.display = 'none';
         document.getElementById('cad-view').style.display = 'block';
 
-        // Cargar datos en la UI
+        // Actualizar nombres en UI e Impresión
         document.getElementById('global-project-name').value = proj.name;
+        document.getElementById('print-title').textContent = proj.name;
+
         document.getElementById('param-pump-dia').value = proj.data.pumpDia || '3';
         document.getElementById('param-well-dia').value = proj.data.wellDia || '4';
         document.getElementById('param-header-dia').value = proj.data.headerDia || '6';
@@ -385,16 +423,15 @@
         userBOM1 = proj.data.bom1 || getDefaultBOM1();
         userBOM2 = proj.data.bom2 || getDefaultBOM2();
 
-        // Inicializar siempre en Plano 1
         switchTab(1);
     }
 
     function goToDashboard() {
-        saveCurrentProjectData(); // Asegurar guardado antes de salir
+        saveCurrentProjectData(); 
         document.getElementById('cad-view').style.display = 'none';
         document.getElementById('dashboard-view').style.display = 'block';
         currentProjectId = null;
-        renderDashboard(); // Refrescar tarjetas
+        renderDashboard(); 
     }
 
     function saveCurrentProjectName() {
@@ -402,6 +439,7 @@
         const newName = document.getElementById('global-project-name').value;
         const projIndex = projects.findIndex(p => p.id === currentProjectId);
         projects[projIndex].name = newName;
+        document.getElementById('print-title').textContent = newName; // Actualizar para el PDF
         saveProjectsToStorage();
     }
 
@@ -451,11 +489,9 @@
             bomContainer.style.display = 'none'; 
             document.getElementById('lbl-top-view').textContent = 'VISTA ACTIVA: ENTORNO 3D (OPTIMIZADO)';
             
-            // Si el 3D no se ha iniciado en esta sesión, lo iniciamos
             if (!is3DInitialized) {
                 init3D();
             } else {
-                // Truco: Forzar que el canvas se adapte al div que acaba de hacerse visible
                 camera.aspect = document.getElementById('viewer-3d').clientWidth / document.getElementById('viewer-3d').clientHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(document.getElementById('viewer-3d').clientWidth, document.getElementById('viewer-3d').clientHeight);
@@ -473,10 +509,10 @@
         else if (activeTab === 2) { renderSVG_Plan2({ filterCount, filterType, headerDia: headerDia + '"', filterDia: '4"' }); renderBOMTable(userBOM2); }
         else if (activeTab === 3) { build3DModel(filterCount, filterType); }
         
-        saveCurrentProjectData(); // Auto-guardar cada vez que tocas algo
+        saveCurrentProjectData(); 
     }
 
-    // Funciones BOM (Las mismas que ya funcionaban perfecto)
+    // Funciones BOM
     function resetCurrentBOM() {
         if (confirm('¿Restaurar lista de este plano a sus valores por defecto?')) {
             if (activeTab === 1) { userBOM1 = getDefaultBOM1(); renderBOMTable(userBOM1); }
@@ -499,13 +535,14 @@
         (activeTab === 1 ? userBOM1 : userBOM2)[i][f] = v; saveCurrentProjectData();
     }
     function renderBOMTable(arr) {
+        // CORRECCIÓN: Botón rojo con el símbolo ✖ vectorial en negrita en lugar de emoji
         document.getElementById('bom-tbody').innerHTML = arr.map((r, i) => `
             <tr>
                 <td><input class="editable-textarea item-num" value="${r.id}" onchange="updateBomItem(${i}, 'id', this.value)"></td>
                 <td><textarea class="editable-textarea" rows="2" style="font-weight:600;" onchange="updateBomItem(${i}, 'desc', this.value)">${r.desc}</textarea></td>
                 <td><textarea class="editable-textarea" rows="2" style="font-weight:700; color:#15803d; background:#dcfce7;" onchange="updateBomItem(${i}, 'qty', this.value)">${r.qty}</textarea></td>
                 <td><textarea class="editable-textarea" rows="2" onchange="updateBomItem(${i}, 'spec', this.value)">${r.spec}</textarea></td>
-                <td style="text-align:center;" class="no-print"><button class="btn-del" onclick="deleteBomRow(${i})">❌</button></td>
+                <td style="text-align:center;" class="no-print"><button class="btn-del" onclick="deleteBomRow(${i})">&#10006;</button></td>
             </tr>
         `).join('');
     }
@@ -516,9 +553,7 @@
         const planoName = activeTab === 1 ? 'Bombeo' : 'Filtrado';
         
         let text = `🚜 *PROYECTO:* ${projName}\n📋 *LISTADO DE COMPRAS:* ${planoName}\n\n`;
-        arr.forEach(i => {
-            text += `*${i.id}.* ${i.desc}\n- Cantidad: ${i.qty}\n- Spec: ${i.spec}\n\n`;
-        });
+        arr.forEach(i => { text += `*${i.id}.* ${i.desc}\n- Cantidad: ${i.qty}\n- Spec: ${i.spec}\n\n`; });
 
         if (navigator.share) {
             navigator.share({ title: `Listado - ${projName}`, text: text }).catch(err => console.log('Error al compartir', err));
@@ -538,7 +573,7 @@
     }
 
     // ==============================================================================================
-    // RENDER SVG 2D: PLANOS (Exactamente iguales)
+    // RENDER SVG 2D: PLANOS (Intactos)
     // ==============================================================================================
     function renderSVG_Plan1(params) {
         const svg = document.getElementById('cad-canvas');
@@ -746,7 +781,7 @@
     }
 
     // ==============================================================================================
-    // MOTOR 3D
+    // MOTOR 3D PROCEDURAL EXACTO
     // ==============================================================================================
     function init3D() {
         const container = document.getElementById('viewer-3d');
@@ -773,6 +808,7 @@
         grid.position.y = -2; scene.add(grid);
 
         is3DInitialized = true;
+
         controls.addEventListener('change', requestRenderIfNotRequested);
         window.addEventListener('resize', requestRenderIfNotRequested);
     }
@@ -963,7 +999,7 @@
     }
 </script>
 
-<!-- SERVICE WORKER SCRIPT INJECTION (PARA LA PWA / MODO OFFLINE) -->
+<!-- SERVICE WORKER (MODO OFFLINE PWA) -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
